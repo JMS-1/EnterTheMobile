@@ -42,7 +42,6 @@ module TheApplication {
 
         private onCreated(): void {
             this.items = this.list.find('[data-role=listview]');
-
             this.load();
         }
     }

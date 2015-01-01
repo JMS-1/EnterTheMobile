@@ -17,7 +17,7 @@
 
 <body>
     <div data-role="page" id="homePage">
-        <div data-role="header" data-position="fixed"">
+        <div data-role="header" data-position="fixed">
             <h1>[Header]</h1>
         </div>
 
@@ -26,12 +26,14 @@
         </div>
 
         <div data-role="footer" data-position="fixed">
-            <a href=" #marketList" id="goShopping" class="ui-btn ui-btn-corner-all ui-btn-icon-left ui-icon-action">Einkaufen</a>
+            <a href="#itemDetails" id="newItem" class="ui-btn ui-btn-corner-all ui-btn-icon-left ui-icon-plus">Eintrag hinzufügen</a>
+            <a href="#marketList" id="goShopping" class="ui-btn ui-btn-corner-all ui-btn-icon-left ui-icon-action">Einkaufen</a>
         </div>
     </div>
 
     <div data-role="page" id="itemDetails">
         <div data-role="header" data-position="fixed">
+            <a class="ui-btn ui-btn-corner-all ui-btn-icon-notext ui-icon-back" data-rel="back">Zurück</a>
             <h1>[Header]</h1>
         </div>
 
@@ -46,22 +48,22 @@
 
     <div data-role="page" id="marketList">
         <div data-role="header" data-position="fixed">
-            <a class="ui-btn ui-btn-corner-all ui-btn-icon-notext ui-icon-home" data-rel="back">Zurück</a>
+            <a href="#homePage" class="ui-btn ui-btn-corner-all ui-btn-icon-notext ui-icon-home">Zurück</a>
             <h1>Wo kaufen wir denn ein?</h1>
         </div>
 
         <div data-role="main" class="ui-content">
-            <ul data-role="listview">
-            </ul>
+            <ul data-role="listview"></ul>
         </div>
 
         <div data-role="footer" data-position="fixed">
-            [Footer]
+            <a href="#marketDetail" id="newMarket" class="ui-btn ui-btn-corner-all ui-btn-icon-left ui-icon-plus">Markt hinzufügen</a>
         </div>
     </div>
 
     <div data-role="page" id="marketDetail">
         <div data-role="header" data-position="fixed">
+            <a class="ui-btn ui-btn-corner-all ui-btn-icon-notext ui-icon-back" data-rel="back">Zurück</a>
             <h1>[Header]</h1>
         </div>
 
