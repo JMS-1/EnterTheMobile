@@ -21,7 +21,7 @@ module Market {
         name: string;
 
         appendTo(items: JQuery): void {
-            var choose = $('<a/>', { text: this.name, href: TheApplication.homeName });
+            var choose = $('<a/>', { text: this.name, href: Item.List.pageName });
             var edit = $('<a/>', { href: Details.pageName });
 
             choose.on('click', () => TheApplication.currentMarket = this);

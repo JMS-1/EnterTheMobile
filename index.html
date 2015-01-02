@@ -10,6 +10,7 @@
 
     <script src="Scripts/jquery-2.1.1.min.js"></script>
     <script src="Scripts/jquery.mobile-1.4.2.min.js"></script>
+    <script src="Scripts/item.js"></script>
     <script src="Scripts/market.js"></script>
     <script src="Scripts/app.js"></script>
 
@@ -17,7 +18,7 @@
 </head>
 
 <body>
-    <div data-role="page" id="homePage">
+    <div data-role="page" id="itemList">
         <div data-role="header" data-position="fixed">
             <h1>[Header]</h1>
         </div>
@@ -34,7 +35,7 @@
 
     <div data-role="page" id="itemDetails">
         <div data-role="header" data-position="fixed">
-            <a class="ui-btn ui-btn-corner-all ui-btn-icon-notext ui-icon-back" data-rel="back">Zurück</a>
+            <a href="#itemList" class="ui-btn ui-btn-corner-all ui-btn-icon-notext ui-icon-back">Zurück</a>
             <h1>[Header]</h1>
         </div>
 
@@ -49,7 +50,7 @@
 
     <div data-role="page" id="marketList">
         <div data-role="header" data-position="fixed">
-            <a href="#homePage" class="ui-btn ui-btn-corner-all ui-btn-icon-notext ui-icon-home">Zurück</a>
+            <a href="#itemList" class="ui-btn ui-btn-corner-all ui-btn-icon-notext ui-icon-home">Zurück</a>
             <h1>Wo kaufen wir denn ein?</h1>
         </div>
 
@@ -64,7 +65,7 @@
 
     <div data-role="page" id="marketDetail">
         <div data-role="header" data-position="fixed">
-            <a class="ui-btn ui-btn-corner-all ui-btn-icon-notext ui-icon-back" data-rel="back">Zurück</a>
+            <a href="#marketList" class="ui-btn ui-btn-corner-all ui-btn-icon-notext ui-icon-back">Zurück</a>
             <h1>[TBD]</h1>
         </div>
 
@@ -76,8 +77,8 @@
         </div>
 
         <div data-role="footer" data-position="fixed">
-            <a id="updateMarket" class="ui-btn ui-btn-corner-all ui-btn-icon-left ui-icon-check" data-rel="back">Speichern</a>
-            <a id="deleteMarket" class="ui-btn ui-btn-corner-all ui-btn-icon-left ui-icon-delete" data-rel="back">Entfernen</a>
+            <a href="#marketList" id="updateMarket" class="ui-btn ui-btn-corner-all ui-btn-icon-left ui-icon-check">Speichern</a>
+            <a href="#marketList" id="deleteMarket" class="ui-btn ui-btn-corner-all ui-btn-icon-left ui-icon-delete">Entfernen</a>
         </div>
     </div>
 

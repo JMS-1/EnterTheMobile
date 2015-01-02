@@ -7,7 +7,7 @@ var Market;
         }
         Market.prototype.appendTo = function (items) {
             var _this = this;
-            var choose = $('<a/>', { text: this.name, href: TheApplication.homeName });
+            var choose = $('<a/>', { text: this.name, href: Item.List.pageName });
             var edit = $('<a/>', { href: Details.pageName });
             choose.on('click', function () { return TheApplication.currentMarket = _this; });
             edit.on('click', function () { return TheApplication.currentDetail = _this; });
