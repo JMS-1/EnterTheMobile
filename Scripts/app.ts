@@ -61,20 +61,50 @@ module TheApplication {
 
     // The home page of it all
     class HomePage {
+        private action: JQuery;
+
         constructor(private list: JQuery) {
+            this.action = this.list.find('#goShopping');
+
             list.on('pagebeforeshow', () => this.onShow());
+            this.action.on('click', () => this.onBuy());
 
             this.onShow();
         }
 
+        // Action on the BUY button
+        private onBuy(): boolean {
+            // If no market is selected it's time to select it now
+            if (currentMarket == null)
+                return true;
+
+            // Done with market
+            currentMarket = null;
+
+            // Refresh the UI
+            this.onShow();
+
+            // And stay where we are
+            return false;
+        }
+
+        // Adapt UI to current operation mode
         private onShow(): void {
             var headerText = this.list.find('[data-role=header] h1');
             var market = currentMarket;
 
-            if (market == null)
+            if (market == null) {
+                // If no market is selected we are in collection mode
                 headerText.text('Deine Einkaufsliste');
-            else
+
+                this.action.text('Einkaufen');
+            }
+            else {
+                // After a market is selected we are in buy mode
                 headerText.text('Einkaufen bei ' + market.name);
+
+                this.action.text('Einkaufen beenden');
+            }
         }
     }
 
@@ -88,28 +118,46 @@ module TheApplication {
 
         constructor(private list: JQuery) {
             list.on('pagecreate', () => this.onCreated());
+            list.on('pagebeforeshow', () => this.onShow());
         }
 
-        private load(): void {
-            var storedMarkets: IStoredMarket[] = JSON.parse(localStorage[MarketSelectionList.storageKey] || null) || [];
-
-            this.markets = $.map(storedMarkets, stored => new Market(stored));
-            this.markets.sort(Market.compare);
-
+        // Update the list
+        private onShow(): void {
+            // Reset current list view
+            this.items.empty();
+            
+            // Reestablish list
             $.each(this.markets, (i, market) => market.appendTo(this.items));
 
+            // Make sure list is mobile enhanced
             this.items.listview('refresh');
         }
 
+        // Update local storage and (!) display
         private save(): void {
+            // Make sure list is always ordered
+            this.markets.sort(Market.compare);
+
+            // Convert to storage format
             localStorage[MarketSelectionList.storageKey] = JSON.stringify(this.markets);
         }
 
+        // Call once when the page is created
         private onCreated(): void {
-            this.list.find('#newMarket').on('click', () => Market.detailsScope = null);
+            // Recover market list from local storage
+            var storedMarkets: IStoredMarket[] = JSON.parse(localStorage[MarketSelectionList.storageKey] || null) || [];
 
+            // Create production classes from pure serialisation
+            this.markets = $.map(storedMarkets, stored => new Market(stored));
+
+            // Locate item list
             this.items = this.list.find('[data-role=listview]');
-            this.load();
+
+            // Process as change
+            this.save();
+
+            // Configure actions
+            this.list.find('#newMarket').on('click', () => Market.detailsScope = null);
         }
     }
 

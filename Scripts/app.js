@@ -37,16 +37,37 @@ var TheApplication;
         function HomePage(list) {
             var _this = this;
             this.list = list;
+            this.action = this.list.find('#goShopping');
             list.on('pagebeforeshow', function () { return _this.onShow(); });
+            this.action.on('click', function () { return _this.onBuy(); });
             this.onShow();
         }
+        // Action on the BUY button
+        HomePage.prototype.onBuy = function () {
+            // If no market is selected it's time to select it now
+            if (currentMarket == null)
+                return true;
+            // Done with market
+            currentMarket = null;
+            // Refresh the UI
+            this.onShow();
+            // And stay where we are
+            return false;
+        };
+        // Adapt UI to current operation mode
         HomePage.prototype.onShow = function () {
             var headerText = this.list.find('[data-role=header] h1');
             var market = currentMarket;
-            if (market == null)
+            if (market == null) {
+                // If no market is selected we are in collection mode
                 headerText.text('Deine Einkaufsliste');
-            else
+                this.action.text('Einkaufen');
+            }
+            else {
+                // After a market is selected we are in buy mode
                 headerText.text('Einkaufen bei ' + market.name);
+                this.action.text('Einkaufen beenden');
+            }
         };
         return HomePage;
     })();
@@ -56,22 +77,37 @@ var TheApplication;
             var _this = this;
             this.list = list;
             list.on('pagecreate', function () { return _this.onCreated(); });
+            list.on('pagebeforeshow', function () { return _this.onShow(); });
         }
-        MarketSelectionList.prototype.load = function () {
+        // Update the list
+        MarketSelectionList.prototype.onShow = function () {
             var _this = this;
-            var storedMarkets = JSON.parse(localStorage[MarketSelectionList.storageKey] || null) || [];
-            this.markets = $.map(storedMarkets, function (stored) { return new Market(stored); });
-            this.markets.sort(Market.compare);
+            // Reset current list view
+            this.items.empty();
+            // Reestablish list
             $.each(this.markets, function (i, market) { return market.appendTo(_this.items); });
+            // Make sure list is mobile enhanced
             this.items.listview('refresh');
         };
+        // Update local storage and (!) display
         MarketSelectionList.prototype.save = function () {
+            // Make sure list is always ordered
+            this.markets.sort(Market.compare);
+            // Convert to storage format
             localStorage[MarketSelectionList.storageKey] = JSON.stringify(this.markets);
         };
+        // Call once when the page is created
         MarketSelectionList.prototype.onCreated = function () {
-            this.list.find('#newMarket').on('click', function () { return Market.detailsScope = null; });
+            // Recover market list from local storage
+            var storedMarkets = JSON.parse(localStorage[MarketSelectionList.storageKey] || null) || [];
+            // Create production classes from pure serialisation
+            this.markets = $.map(storedMarkets, function (stored) { return new Market(stored); });
+            // Locate item list
             this.items = this.list.find('[data-role=listview]');
-            this.load();
+            // Process as change
+            this.save();
+            // Configure actions
+            this.list.find('#newMarket').on('click', function () { return Market.detailsScope = null; });
         };
         MarketSelectionList.storageKey = 'MarketList';
         return MarketSelectionList;
