@@ -1,15 +1,20 @@
 ﻿
 module TheApplication {
+    // Global constants
+    var classDisabled = 'ui-disabled';
+
     var homeName = '#homePage';
     var marketListName = '#marketList';
     var marketDetailsName = '#marketDetail';
 
+    // Wrapper instances for all pages
     var marketSelectionList: MarketSelectionList;
     var marketDetails: MarketDetails;
     var homePage: HomePage;
 
-    // Set as soon as we start buying
+    // Global context
     var currentMarket: IMarket = null;
+    var currentDetail: IMarket = null;
 
     // Synchronized startup code
     $(() => {
@@ -32,9 +37,6 @@ module TheApplication {
 
     // Market effective data implementation
     class Market implements IMarket {
-        // Current market for details form
-        static detailsScope: IMarket;
-
         constructor(fromStore: IStoredMarket) {
             this.name = fromStore.name;
         }
@@ -46,7 +48,7 @@ module TheApplication {
             var edit = $('<a/>', { href: marketDetailsName });
 
             choose.on('click', () => currentMarket = this);
-            edit.on('click', () => Market.detailsScope = this);
+            edit.on('click', () => currentDetail = this);
 
             items
                 .append($('<li/>')
@@ -55,7 +57,11 @@ module TheApplication {
         }
 
         static compare(left: IStoredMarket, right: IStoredMarket): number {
-            return left.name.localeCompare(right.name);
+            return Market.compareNames(left.name, right.name);
+        }
+
+        static compareNames(left: string, right: string): number {
+            return left.localeCompare(right);
         }
     }
 
@@ -112,7 +118,7 @@ module TheApplication {
     class MarketSelectionList {
         private static storageKey = 'MarketList';
 
-        private markets: IMarket[];
+        markets: IMarket[];
 
         private items: JQuery;
 
@@ -125,7 +131,7 @@ module TheApplication {
         private onShow(): void {
             // Reset current list view
             this.items.empty();
-            
+
             // Reestablish list
             $.each(this.markets, (i, market) => market.appendTo(this.items));
 
@@ -134,7 +140,7 @@ module TheApplication {
         }
 
         // Update local storage and (!) display
-        private save(): void {
+        save(): void {
             // Make sure list is always ordered
             this.markets.sort(Market.compare);
 
@@ -157,24 +163,108 @@ module TheApplication {
             this.save();
 
             // Configure actions
-            this.list.find('#newMarket').on('click', () => Market.detailsScope = null);
+            this.list.find('#newMarket').on('click', () => currentDetail = null);
         }
     }
 
     // The market details page
     class MarketDetails {
+        // Update action - either create new or modify existing
+        private save: JQuery;
+
+        // Delete action - only for existing
+        private delete: JQuery;
+
+        // Header text element
+        private header: JQuery;
+
+        // Name input element
+        private input: JQuery;
+
         constructor(private list: JQuery) {
+            this.input = list.find('#marketText');
+            this.save = list.find('#updateMarket');
+            this.delete = list.find('#deleteMarket');
+            this.header = list.find('[data-role=header] h1');
+
             list.on('pagebeforeshow', () => this.onShow());
+            this.save.on('click', () => this.onClose());
+            this.delete.on('click', () => this.onDelete());
+            this.input.on('change input', () => this.onValidate());
         }
 
-        private onShow(): void {
-            var headerText = this.list.find('[data-role=header] h1');
-            var market = Market.detailsScope;
+        private getName(): string {
+            return (this.input.val() || '').trim();
+        }
 
-            if (market == null)
-                headerText.text('Neuen Markt anlegen');
+        // Validate the name
+        private onValidate(): void {
+            var valid = true;
+            var name = this.getName();
+
+            if (name.length < 1)
+                // Name must not be empty
+                valid = false;
             else
-                headerText.text('Marktdaten verändern');
+                $.each(marketSelectionList.markets, (i, market) => {
+                    // Name not in use
+                    if (Market.compareNames(name, market.name) != 0)
+                        return true;
+
+                    // This is the one we are modifying
+                    if (market === currentDetail)
+                        return true;
+
+                    // Name clash
+                    valid = false;
+                    return false;
+                });
+
+            // Update UI accordingly
+            if (valid)
+                this.save.removeClass(classDisabled);
+            else
+                this.save.addClass(classDisabled);
+        }
+
+        // Save the change
+        private onClose(): void {
+            var name = this.getName();
+
+            if (currentDetail == null) 
+                // Create new
+                marketSelectionList.markets.push(new Market({ name: name }));
+            else
+                // Update existing
+                currentDetail.name = name;
+
+            marketSelectionList.save();
+        }
+
+        // Delete the current market
+        private onDelete(): void {
+            var index = marketSelectionList.markets.indexOf(currentDetail);
+
+            marketSelectionList.markets.splice(index, 1);
+            marketSelectionList.save();
+        }
+
+        // Update UI according to current mode of operation
+        private onShow(): void {
+            if (currentDetail == null) {
+                this.header.text('Neuen Markt anlegen');
+                this.input.val('');
+                this.save.text('Anlegen');
+                this.delete.hide();
+            }
+            else {
+                this.header.text('Marktdaten verändern');
+                this.input.val(currentDetail.name);
+                this.save.text('Ändern');
+                this.delete.show();
+            }
+
+            this.onValidate();
         }
     }
 }

@@ -27,7 +27,7 @@
 
         <div data-role="footer" data-position="fixed">
             <a href="#itemDetails" id="newItem" class="ui-btn ui-btn-corner-all ui-btn-icon-left ui-icon-plus">Eintrag hinzufügen</a>
-            <a href="#marketList" id="goShopping" class="ui-btn ui-btn-corner-all ui-btn-icon-left ui-icon-action">Einkaufen</a>
+            <a href="#marketList" id="goShopping" class="ui-btn ui-btn-corner-all ui-btn-icon-left ui-icon-shop">Einkaufen</a>
         </div>
     </div>
 
@@ -64,15 +64,19 @@
     <div data-role="page" id="marketDetail">
         <div data-role="header" data-position="fixed">
             <a class="ui-btn ui-btn-corner-all ui-btn-icon-notext ui-icon-back" data-rel="back">Zurück</a>
-            <h1>[Header]</h1>
+            <h1>[TBD]</h1>
         </div>
 
         <div data-role="main" class="ui-content">
-            [Content]
+            <form>
+                <label for="marketText">Name des Marktes:</label>
+                <input type="text" id="marketText" name="marketText" placeholder="bitte einen neuen Namen eingeben" />
+            </form>
         </div>
 
         <div data-role="footer" data-position="fixed">
-            [Footer]
+            <a id="updateMarket" class="ui-btn ui-btn-corner-all ui-btn-icon-left ui-icon-check" data-rel="back">Speichern</a>
+            <a id="deleteMarket" class="ui-btn ui-btn-corner-all ui-btn-icon-left ui-icon-delete" data-rel="back">Entfernen</a>
         </div>
     </div>
 

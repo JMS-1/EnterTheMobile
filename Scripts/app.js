@@ -1,13 +1,17 @@
 var TheApplication;
 (function (TheApplication) {
+    // Global constants
+    var classDisabled = 'ui-disabled';
     var homeName = '#homePage';
     var marketListName = '#marketList';
     var marketDetailsName = '#marketDetail';
+    // Wrapper instances for all pages
     var marketSelectionList;
     var marketDetails;
     var homePage;
-    // Set as soon as we start buying
+    // Global context
     var currentMarket = null;
+    var currentDetail = null;
     // Synchronized startup code
     $(function () {
         marketSelectionList = new MarketSelectionList($(marketListName));
@@ -24,11 +28,14 @@ var TheApplication;
             var choose = $('<a/>', { text: this.name, href: homeName });
             var edit = $('<a/>', { href: marketDetailsName });
             choose.on('click', function () { return currentMarket = _this; });
-            edit.on('click', function () { return Market.detailsScope = _this; });
+            edit.on('click', function () { return currentDetail = _this; });
             items.append($('<li/>').append(choose).append(edit));
         };
         Market.compare = function (left, right) {
-            return left.name.localeCompare(right.name);
+            return Market.compareNames(left.name, right.name);
+        };
+        Market.compareNames = function (left, right) {
+            return left.localeCompare(right);
         };
         return Market;
     })();
@@ -107,7 +114,7 @@ var TheApplication;
             // Process as change
             this.save();
             // Configure actions
-            this.list.find('#newMarket').on('click', function () { return Market.detailsScope = null; });
+            this.list.find('#newMarket').on('click', function () { return currentDetail = null; });
         };
         MarketSelectionList.storageKey = 'MarketList';
         return MarketSelectionList;
@@ -117,15 +124,75 @@ var TheApplication;
         function MarketDetails(list) {
             var _this = this;
             this.list = list;
+            this.input = list.find('#marketText');
+            this.save = list.find('#updateMarket');
+            this.delete = list.find('#deleteMarket');
+            this.header = list.find('[data-role=header] h1');
             list.on('pagebeforeshow', function () { return _this.onShow(); });
+            this.save.on('click', function () { return _this.onClose(); });
+            this.delete.on('click', function () { return _this.onDelete(); });
+            this.input.on('change input', function () { return _this.onValidate(); });
         }
-        MarketDetails.prototype.onShow = function () {
-            var headerText = this.list.find('[data-role=header] h1');
-            var market = Market.detailsScope;
-            if (market == null)
-                headerText.text('Neuen Markt anlegen');
+        MarketDetails.prototype.getName = function () {
+            return (this.input.val() || '').trim();
+        };
+        // Validate the name
+        MarketDetails.prototype.onValidate = function () {
+            var valid = true;
+            var name = this.getName();
+            if (name.length < 1)
+                // Name must not be empty
+                valid = false;
             else
-                headerText.text('Marktdaten verändern');
+                $.each(marketSelectionList.markets, function (i, market) {
+                    // Name not in use
+                    if (Market.compareNames(name, market.name) != 0)
+                        return true;
+                    // This is the one we are modifying
+                    if (market === currentDetail)
+                        return true;
+                    // Name clash
+                    valid = false;
+                    return false;
+                });
+            // Update UI accordingly
+            if (valid)
+                this.save.removeClass(classDisabled);
+            else
+                this.save.addClass(classDisabled);
+        };
+        // Save the change
+        MarketDetails.prototype.onClose = function () {
+            var name = this.getName();
+            if (currentDetail == null)
+                // Create new
+                marketSelectionList.markets.push(new Market({ name: name }));
+            else
+                // Update existing
+                currentDetail.name = name;
+            marketSelectionList.save();
+        };
+        // Delete the current market
+        MarketDetails.prototype.onDelete = function () {
+            var index = marketSelectionList.markets.indexOf(currentDetail);
+            marketSelectionList.markets.splice(index, 1);
+            marketSelectionList.save();
+        };
+        // Update UI according to current mode of operation
+        MarketDetails.prototype.onShow = function () {
+            if (currentDetail == null) {
+                this.header.text('Neuen Markt anlegen');
+                this.input.val('');
+                this.save.text('Anlegen');
+                this.delete.hide();
+            }
+            else {
+                this.header.text('Marktdaten verändern');
+                this.input.val(currentDetail.name);
+                this.save.text('Ändern');
+                this.delete.show();
+            }
+            this.onValidate();
         };
         return MarketDetails;
     })();
