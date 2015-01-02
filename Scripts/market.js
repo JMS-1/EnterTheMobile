@@ -26,19 +26,19 @@ var Market;
     var List = (function () {
         function List() {
             var _this = this;
-            this.list = $(List.pageName);
-            this.list.on('pagecreate', function () { return _this.onCreated(); });
-            this.list.on('pagebeforeshow', function () { return _this.onShow(); });
+            this.page = $(List.pageName);
+            this.page.on('pagecreate', function () { return _this.onCreated(); });
+            this.page.on('pagebeforeshow', function () { return _this.onShow(); });
         }
         // Update the list
         List.prototype.onShow = function () {
             var _this = this;
             // Reset current list view
-            this.items.empty();
+            this.list.empty();
             // Reestablish list
-            $.each(this.markets, function (i, market) { return market.appendTo(_this.items); });
+            $.each(this.markets, function (i, market) { return market.appendTo(_this.list); });
             // Make sure list is mobile enhanced
-            this.items.listview('refresh');
+            this.list.listview('refresh');
         };
         // Update local storage and (!) display
         List.prototype.save = function () {
@@ -50,7 +50,7 @@ var Market;
         // Call once when the page is created
         List.prototype.onCreated = function () {
             // Locate item list
-            this.items = this.list.find('[data-role=listview]');
+            this.list = this.page.find('[data-role=listview]');
             // Recover market list from local storage
             var storedMarkets = JSON.parse(localStorage[List.storageKey] || null) || [];
             // Create production classes from pure serialisation
@@ -58,7 +58,7 @@ var Market;
             // Process as change
             this.save();
             // Configure actions
-            this.list.find('#newMarket').on('click', function () { return TheApplication.currentDetail = null; });
+            this.page.find('#newMarket').on('click', function () { return TheApplication.currentDetail = null; });
         };
         List.storageKey = 'MarketList';
         List.pageName = '#marketList';

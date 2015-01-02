@@ -48,29 +48,29 @@ module Market {
 
         private static pageName = '#marketList';
 
-        private items: JQuery;
-
         private list: JQuery;
+
+        private page: JQuery;
 
         markets: IMarket[];
 
         constructor() {
-            this.list = $(List.pageName);
+            this.page = $(List.pageName);
 
-            this.list.on('pagecreate', () => this.onCreated());
-            this.list.on('pagebeforeshow', () => this.onShow());
+            this.page.on('pagecreate', () => this.onCreated());
+            this.page.on('pagebeforeshow', () => this.onShow());
         }
 
         // Update the list
         private onShow(): void {
             // Reset current list view
-            this.items.empty();
+            this.list.empty();
 
             // Reestablish list
-            $.each(this.markets, (i, market) => market.appendTo(this.items));
+            $.each(this.markets, (i, market) => market.appendTo(this.list));
 
             // Make sure list is mobile enhanced
-            this.items.listview('refresh');
+            this.list.listview('refresh');
         }
 
         // Update local storage and (!) display
@@ -85,7 +85,7 @@ module Market {
         // Call once when the page is created
         private onCreated(): void {
             // Locate item list
-            this.items = this.list.find('[data-role=listview]');
+            this.list = this.page.find('[data-role=listview]');
 
             // Recover market list from local storage
             var storedMarkets: IStoredMarket[] = JSON.parse(localStorage[List.storageKey] || null) || [];
@@ -97,7 +97,7 @@ module Market {
             this.save();
 
             // Configure actions
-            this.list.find('#newMarket').on('click', () => TheApplication.currentDetail = null);
+            this.page.find('#newMarket').on('click', () => TheApplication.currentDetail = null);
         }
     }
 
