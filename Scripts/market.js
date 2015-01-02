@@ -9,8 +9,8 @@ var Market;
             var _this = this;
             var choose = $('<a/>', { text: this.name, href: Item.List.pageName });
             var edit = $('<a/>', { href: Details.pageName });
-            choose.on('click', function () { return TheApplication.currentMarket = _this; });
-            edit.on('click', function () { return TheApplication.currentDetail = _this; });
+            choose.on('click', function () { return TheApplication.activeMarket = _this; });
+            edit.on('click', function () { return TheApplication.marketScope = _this; });
             items.append($('<li/>').append(choose).append(edit));
         };
         Market.compare = function (left, right) {
@@ -58,7 +58,7 @@ var Market;
             // Process as change
             this.save();
             // Configure actions
-            this.page.find('#newMarket').on('click', function () { return TheApplication.currentDetail = null; });
+            this.page.find('#newMarket').on('click', function () { return TheApplication.marketScope = null; });
         };
         List.storageKey = 'MarketList';
         List.pageName = '#marketList';
@@ -96,7 +96,7 @@ var Market;
                     if (Market.compareNames(name, market.name) != 0)
                         return true;
                     // This is the one we are modifying
-                    if (market === TheApplication.currentDetail)
+                    if (market === TheApplication.marketScope)
                         return true;
                     // Name clash
                     valid = false;
@@ -111,23 +111,23 @@ var Market;
         // Save the change
         Details.prototype.onClose = function () {
             var name = this.getName();
-            if (TheApplication.currentDetail == null)
+            if (TheApplication.marketScope == null)
                 // Create new
                 this.list.markets.push(new Market({ name: name }));
             else
                 // Update existing
-                TheApplication.currentDetail.name = name;
+                TheApplication.marketScope.name = name;
             this.list.save();
         };
         // Delete the current market
         Details.prototype.onDelete = function () {
-            var index = this.list.markets.indexOf(TheApplication.currentDetail);
+            var index = this.list.markets.indexOf(TheApplication.marketScope);
             this.list.markets.splice(index, 1);
             this.list.save();
         };
         // Update UI according to current mode of operation
         Details.prototype.onShow = function () {
-            if (TheApplication.currentDetail == null) {
+            if (TheApplication.marketScope == null) {
                 this.header.text('Neuen Markt anlegen');
                 this.input.val('');
                 this.save.text('Anlegen');
@@ -135,7 +135,7 @@ var Market;
             }
             else {
                 this.header.text('Marktdaten verändern');
-                this.input.val(TheApplication.currentDetail.name);
+                this.input.val(TheApplication.marketScope.name);
                 this.save.text('Ändern');
                 this.delete.show();
             }

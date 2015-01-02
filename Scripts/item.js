@@ -17,6 +17,10 @@ var Item;
             this.market = stored.market;
             this.created = stored.created;
             this.description = stored.description;
+            if (typeof (this.created) == 'string')
+                this.created = new Date((this.created));
+            if (typeof (this.bought) == 'string')
+                this.bought = new Date((this.bought));
         }
         Item.prototype.appendTo = function (items) {
             var _this = this;
@@ -26,8 +30,9 @@ var Item;
             items.append(checker, label);
         };
         Item.prototype.onClick = function (ev) {
-            if (TheApplication.currentMarket == null) {
-                $.mobile.changePage('#itemDetails', { transition: 'none' });
+            if (TheApplication.activeMarket == null) {
+                TheApplication.itemScope = this;
+                $.mobile.changePage(Details.pageName, { transition: 'none' });
             }
         };
         Item.nextCount = 0;
@@ -59,10 +64,10 @@ var Item;
         // Action on the BUY button
         List.prototype.onBuy = function () {
             // If no market is selected it's time to select it now
-            if (TheApplication.currentMarket == null)
+            if (TheApplication.activeMarket == null)
                 return true;
             // Done with market
-            TheApplication.currentMarket = null;
+            TheApplication.activeMarket = null;
             // Refresh the UI
             this.onShow();
             // And stay where we are
@@ -73,7 +78,7 @@ var Item;
             this.loadList();
             var headerText = this.page.find('[data-role=header] h1');
             var checkboxes = this.list.find('[type=checkbox]');
-            var market = TheApplication.currentMarket;
+            var market = TheApplication.activeMarket;
             if (market == null) {
                 // If no market is selected we are in collection mode
                 headerText.text('Deine Einkaufsliste');
@@ -90,5 +95,46 @@ var Item;
         return List;
     })();
     _Item.List = List;
+    var Details = (function () {
+        function Details() {
+            var _this = this;
+            this.form = $(Details.pageName);
+            this.header = this.form.find('[data-role=header] h1');
+            this.description = this.form.find('#itemDescription');
+            this.bought = this.form.find('#itemBought');
+            this.market = this.form.find('#itemMarket');
+            this.created = this.form.find('#itemDate');
+            this.name = this.form.find('#itemName');
+            this.form.on('pagebeforeshow', function () { return _this.onShow(); });
+        }
+        Details.prototype.onShow = function () {
+            var item = TheApplication.itemScope;
+            if (item == null) {
+                this.header.text('Neues Produkt anlegen');
+                this.name.val('');
+                this.bought.val('');
+                this.market.val('');
+                this.description.val('');
+                this.created.val(TheApplication.formatDateTime(new Date($.now())));
+            }
+            else {
+                this.header.text(item.name);
+                this.name.val(item.name);
+                this.description.val(item.description);
+                this.created.val(TheApplication.formatDateTime(item.created));
+                if (item.bought == null) {
+                    this.bought.val('');
+                    this.market.val('');
+                }
+                else {
+                    this.bought.val(TheApplication.formatDateTime(item.bought));
+                    this.market.val(item.market);
+                }
+            }
+        };
+        Details.pageName = '#itemDetails';
+        return Details;
+    })();
+    _Item.Details = Details;
 })(Item || (Item = {}));
 //# sourceMappingURL=item.js.map

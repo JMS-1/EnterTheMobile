@@ -42,7 +42,18 @@
         </div>
 
         <div data-role="main" class="ui-content">
-            [Content]
+            <form>
+                <label for="itemName">Produkt:</label>
+                <input type="text" id="itemName" name="itemName" placeholder="bitte ein Produkt eintragen" />
+                <label for="itemDescription">Beschreibung:</label>
+                <textarea id="itemDescription" name="itemDescription"></textarea>
+                <label for="itemDate">Angelegt:</label>
+                <input type="text" id="itemDate" name="itemDate" class="ui-disabled" />
+                <label for="itemBuy">Gekauft:</label>
+                <input type="text" id="itemBought" name="itemBought" class="ui-disabled" />
+                <label for="itemBuy">Markt:</label>
+                <input type="text" id="itemMarket" name="itemMarket" data-clear-btn="true" class="ui-disabled" />
+            </form>
         </div>
 
         <div data-role="footer" data-position="fixed">

@@ -24,8 +24,8 @@ module Market {
             var choose = $('<a/>', { text: this.name, href: Item.List.pageName });
             var edit = $('<a/>', { href: Details.pageName });
 
-            choose.on('click', () => TheApplication.currentMarket = this);
-            edit.on('click', () => TheApplication.currentDetail = this);
+            choose.on('click', () => TheApplication.activeMarket = this);
+            edit.on('click', () => TheApplication.marketScope = this);
 
             items
                 .append($('<li/>')
@@ -97,7 +97,7 @@ module Market {
             this.save();
 
             // Configure actions
-            this.page.find('#newMarket').on('click', () => TheApplication.currentDetail = null);
+            this.page.find('#newMarket').on('click', () => TheApplication.marketScope = null);
         }
     }
 
@@ -154,7 +154,7 @@ module Market {
                         return true;
 
                     // This is the one we are modifying
-                    if (market === TheApplication.currentDetail)
+                    if (market === TheApplication.marketScope)
                         return true;
 
                     // Name clash
@@ -173,19 +173,19 @@ module Market {
         private onClose(): void {
             var name = this.getName();
 
-            if (TheApplication.currentDetail == null)
+            if (TheApplication.marketScope == null)
                 // Create new
                 this.list.markets.push(new Market({ name: name }));
             else
                 // Update existing
-                TheApplication.currentDetail.name = name;
+                TheApplication.marketScope.name = name;
 
             this.list.save();
         }
 
         // Delete the current market
         private onDelete(): void {
-            var index = this.list.markets.indexOf(TheApplication.currentDetail);
+            var index = this.list.markets.indexOf(TheApplication.marketScope);
 
             this.list.markets.splice(index, 1);
             this.list.save();
@@ -193,7 +193,7 @@ module Market {
 
         // Update UI according to current mode of operation
         private onShow(): void {
-            if (TheApplication.currentDetail == null) {
+            if (TheApplication.marketScope == null) {
                 this.header.text('Neuen Markt anlegen');
                 this.input.val('');
                 this.save.text('Anlegen');
@@ -201,7 +201,7 @@ module Market {
             }
             else {
                 this.header.text('Marktdaten verändern');
-                this.input.val(TheApplication.currentDetail.name);
+                this.input.val(TheApplication.marketScope.name);
                 this.save.text('Ändern');
                 this.delete.show();
             }
