@@ -61,7 +61,7 @@ module TheApplication {
         }
 
         static compareNames(left: string, right: string): number {
-            return left.localeCompare(right);
+            return left.localeCompare(right, undefined , { sensitivity: 'base' });
         }
     }
 
@@ -231,7 +231,7 @@ module TheApplication {
         private onClose(): void {
             var name = this.getName();
 
-            if (currentDetail == null) 
+            if (currentDetail == null)
                 // Create new
                 marketSelectionList.markets.push(new Market({ name: name }));
             else

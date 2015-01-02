@@ -35,7 +35,7 @@ var TheApplication;
             return Market.compareNames(left.name, right.name);
         };
         Market.compareNames = function (left, right) {
-            return left.localeCompare(right);
+            return left.localeCompare(right, undefined, { sensitivity: 'base' });
         };
         return Market;
     })();
