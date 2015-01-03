@@ -1,10 +1,4 @@
 ﻿<?php
-	// Just during development
-	ini_set('display_startup_errors',1);
-	ini_set('display_errors',1);
-	error_reporting(-1);
-	/* */
-
 	include('connect.php');
 
 	$userid = 'BC4A471061274EECBBDD4F945B00E6D0';
