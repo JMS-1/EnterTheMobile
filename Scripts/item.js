@@ -8,7 +8,8 @@ var Item;
     })(_Item.ItemState || (_Item.ItemState = {}));
     var ItemState = _Item.ItemState;
     var Item = (function () {
-        function Item(stored) {
+        function Item(stored, list) {
+            this.list = list;
             this.seq = 'itm' + (++Item.nextCount);
             this.id = stored.id;
             this.name = stored.name;
@@ -24,15 +25,31 @@ var Item;
         }
         Item.prototype.appendTo = function (items) {
             var _this = this;
-            var checker = $('<input/>', { type: 'checkbox', name: this.seq, id: this.seq });
-            var label = $('<label/>', { text: this.name, 'for': this.seq });
-            checker.on('change', function (ev) { return _this.onClick(ev); });
-            items.append(checker, label);
+            if (this.state == 1 /* Deleted */)
+                return;
+            this.checker = $('<input/>', { type: 'checkbox', name: this.seq, id: this.seq });
+            this.checker.prop('checked', this.market != null);
+            this.checker.on('change', function (ev) { return _this.onClick(ev); });
+            var label = $('<label/>', { text: this.name, title: this.description, 'for': this.seq });
+            items.append(this.checker, label);
         };
         Item.prototype.onClick = function (ev) {
             if (TheApplication.activeMarket == null) {
                 TheApplication.itemScope = this;
                 $.mobile.changePage(Details.pageName, { transition: 'none' });
+            }
+            else {
+                if (this.checker.is(':checked')) {
+                    this.market = TheApplication.activeMarket.name;
+                    this.bought = new Date($.now());
+                }
+                else {
+                    this.market = null;
+                    this.bought = null;
+                }
+                if (this.state == 3 /* Unchanged */)
+                    this.state = 2 /* Modified */;
+                this.list.save();
             }
         };
         Item.nextCount = 0;
@@ -46,20 +63,32 @@ var Item;
             this.page = $(List.pageName);
             this.action = this.page.find('#goShopping');
             this.list = this.page.find('[data-role=controlgroup]');
+            this.filter = this.page.find('#filter');
+            this.page.find('#newItem').on('click', function () { return TheApplication.itemScope = null; });
             this.page.on('pagebeforeshow', function () { return _this.onShow(); });
+            this.filter.on('change', function () { return _this.loadList(); });
             this.action.on('click', function () { return _this.onBuy(); });
             var storedItems = JSON.parse(localStorage[List.storageKey] || null) || [];
-            this.items = $.map(storedItems, function (stored) { return new Item(stored); });
+            this.items = $.map(storedItems, function (stored) { return new Item(stored, _this); });
             this.onShow();
         }
         List.prototype.loadList = function () {
             var _this = this;
             this.list.empty();
-            $.each(this.items, function (i, item) { return item.appendTo(_this.list); });
+            var all = (this.filter.val() == 1);
+            $.each(this.items, function (i, item) {
+                if (all || (item.market == null))
+                    item.appendTo(_this.list);
+            });
             this.list.trigger('create');
         };
         List.prototype.save = function () {
-            localStorage[List.storageKey] = JSON.stringify(this.items);
+            localStorage[List.storageKey] = JSON.stringify(this.items, function (key, value) {
+                if (key == 'list')
+                    return undefined;
+                else
+                    return value;
+            });
         };
         // Action on the BUY button
         List.prototype.onBuy = function () {
@@ -77,7 +106,6 @@ var Item;
         List.prototype.onShow = function () {
             this.loadList();
             var headerText = this.page.find('[data-role=header] h1');
-            var checkboxes = this.list.find('[type=checkbox]');
             var market = TheApplication.activeMarket;
             if (market == null) {
                 // If no market is selected we are in collection mode
@@ -96,29 +124,79 @@ var Item;
     })();
     _Item.List = List;
     var Details = (function () {
-        function Details() {
+        function Details(list) {
             var _this = this;
+            this.list = list;
             this.form = $(Details.pageName);
             this.header = this.form.find('[data-role=header] h1');
             this.description = this.form.find('#itemDescription');
+            this.delete = this.form.find('#deleteItem');
             this.bought = this.form.find('#itemBought');
             this.market = this.form.find('#itemMarket');
             this.created = this.form.find('#itemDate');
+            this.save = this.form.find('#updateItem');
             this.name = this.form.find('#itemName');
             this.form.on('pagebeforeshow', function () { return _this.onShow(); });
+            this.form.on('pageshow', function () { return _this.name.focus(); });
+            this.save.on('click', function () { return _this.onClose(); });
+            this.delete.on('click', function () { return _this.onDelete(); });
+            this.name.on('change input', function () { return _this.onValidate(); });
         }
+        Details.prototype.getName = function () {
+            return (this.name.val() || '').trim();
+        };
+        Details.prototype.getDescription = function () {
+            return (this.description.val() || '').trim();
+        };
+        Details.prototype.onClose = function () {
+            var name = this.getName();
+            var description = this.getDescription();
+            var item = TheApplication.itemScope;
+            if (item == null)
+                this.list.items.push(new Item({
+                    state: 0 /* NewlyCreated */,
+                    created: new Date($.now()),
+                    description: description,
+                    bought: null,
+                    market: null,
+                    name: name,
+                    id: null,
+                }, this.list));
+            else {
+                item.name = name;
+                item.description = description;
+                if (item.state == 3 /* Unchanged */)
+                    item.state = 2 /* Modified */;
+            }
+            this.list.save();
+        };
+        Details.prototype.onDelete = function () {
+            TheApplication.itemScope.state = 1 /* Deleted */;
+            this.list.save();
+        };
+        Details.prototype.onValidate = function () {
+            var name = this.getName();
+            if (name.length > 0)
+                this.save.removeClass(TheApplication.classDisabled);
+            else
+                this.save.addClass(TheApplication.classDisabled);
+        };
         Details.prototype.onShow = function () {
             var item = TheApplication.itemScope;
             if (item == null) {
                 this.header.text('Neues Produkt anlegen');
+                this.save.text('Anlegen');
+                this.delete.hide();
                 this.name.val('');
                 this.bought.val('');
                 this.market.val('');
+                this.created.val('');
                 this.description.val('');
-                this.created.val(TheApplication.formatDateTime(new Date($.now())));
             }
             else {
                 this.header.text(item.name);
+                this.save.text('Ändern');
+                this.delete.show();
                 this.name.val(item.name);
                 this.description.val(item.description);
                 this.created.val(TheApplication.formatDateTime(item.created));

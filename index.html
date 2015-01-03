@@ -25,6 +25,14 @@
 
         <div data-role="main" class="ui-content">
             <form>
+                <div data-role="fieldcontain" id="filterContainer">
+                    <label for="filter">Auch gekaufte Produkte anzeigen:</label>
+                    <select name="filter" id="filter" data-role="slider" data-mini="true">
+                        <option value="1">nein</option>
+                        <option value="0">ja</option>
+                    </select>
+                </div>
+
                 <fieldset data-role="controlgroup"></fieldset>
             </form>
         </div>
@@ -48,16 +56,17 @@
                 <label for="itemDescription">Beschreibung:</label>
                 <textarea id="itemDescription" name="itemDescription"></textarea>
                 <label for="itemDate">Angelegt:</label>
-                <input type="text" id="itemDate" name="itemDate" class="ui-disabled" />
+                <input type="text" id="itemDate" name="itemDate" disabled="disabled" />
                 <label for="itemBuy">Gekauft:</label>
-                <input type="text" id="itemBought" name="itemBought" class="ui-disabled" />
+                <input type="text" id="itemBought" name="itemBought" disabled="disabled" />
                 <label for="itemBuy">Markt:</label>
-                <input type="text" id="itemMarket" name="itemMarket" data-clear-btn="true" class="ui-disabled" />
+                <input type="text" id="itemMarket" name="itemMarket" disabled="disabled" />
             </form>
         </div>
 
         <div data-role="footer" data-position="fixed">
-            [Footer]
+            <a href="#itemList" id="updateItem" class="ui-btn ui-btn-corner-all ui-btn-icon-left ui-icon-check">Speichern</a>
+            <a href="#itemList" id="deleteItem" class="ui-btn ui-btn-corner-all ui-btn-icon-left ui-icon-delete">Entfernen</a>
         </div>
     </div>
 

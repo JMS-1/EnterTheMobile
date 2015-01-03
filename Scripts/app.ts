@@ -12,7 +12,7 @@ module TheApplication {
     $(() => {
         // Item management
         var itemList = new Item.List();
-        var itemDetails = new Item.Details();
+        var itemDetails = new Item.Details(itemList);
 
         // Market management
         var marketSelectionList = new Market.List();

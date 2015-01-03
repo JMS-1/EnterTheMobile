@@ -49,7 +49,9 @@ module Item {
 
         market: string;
 
-        constructor(stored: IStoredItem) {
+        private checker: JQuery;
+
+        constructor(stored: IStoredItem, private list: List) {
             this.seq = 'itm' + (++Item.nextCount);
 
             this.id = stored.id;
@@ -67,12 +69,17 @@ module Item {
         }
 
         appendTo(items: JQuery): void {
-            var checker = $('<input/>', { type: 'checkbox', name: this.seq, id: this.seq });
-            var label = $('<label/>', { text: this.name, 'for': this.seq });
+            if (this.state == ItemState.Deleted)
+                return;
 
-            checker.on('change', ev => this.onClick(ev));
+            this.checker = $('<input/>', { type: 'checkbox', name: this.seq, id: this.seq });
+            this.checker.prop('checked', this.market != null);
 
-            items.append(checker, label);
+            this.checker.on('change', ev => this.onClick(ev));
+
+            var label = $('<label/>', { text: this.name, title: this.description, 'for': this.seq });
+
+            items.append(this.checker, label);
         }
 
         private onClick(ev: JQueryEventObject): void {
@@ -80,6 +87,21 @@ module Item {
                 TheApplication.itemScope = this;
 
                 $.mobile.changePage(Details.pageName, { transition: 'none' });
+            }
+            else {
+                if (this.checker.is(':checked')) {
+                    this.market = TheApplication.activeMarket.name;
+                    this.bought = new Date($.now());
+                }
+                else {
+                    this.market = null;
+                    this.bought = null;
+                }
+
+                if (this.state == ItemState.Unchanged)
+                    this.state = ItemState.Modified;
+
+                this.list.save();
             }
         }
     }
@@ -96,19 +118,25 @@ module Item {
 
         private list: JQuery;
 
-        private items: IItem[];
+        private filter: JQuery;
+
+        items: IItem[];
 
         constructor() {
             this.page = $(List.pageName);
             this.action = this.page.find('#goShopping');
             this.list = this.page.find('[data-role=controlgroup]');
+            this.filter = this.page.find('#filter');
 
+            this.page.find('#newItem').on('click', () => TheApplication.itemScope = null);
             this.page.on('pagebeforeshow', () => this.onShow());
+
+            this.filter.on('change', () => this.loadList());
             this.action.on('click', () => this.onBuy());
 
             var storedItems: IStoredItem[] = JSON.parse(localStorage[List.storageKey] || null) || [];
 
-            this.items = $.map(storedItems, stored => new Item(stored));
+            this.items = $.map(storedItems, stored => new Item(stored, this));
 
             this.onShow();
         }
@@ -116,13 +144,23 @@ module Item {
         private loadList(): void {
             this.list.empty();
 
-            $.each(this.items, (i, item) => item.appendTo(this.list));
+            var all = (this.filter.val() == 1);
+
+            $.each(this.items, (i, item) => {
+                if (all || (item.market == null))
+                    item.appendTo(this.list);
+            });
 
             this.list.trigger('create');
         }
 
-        private save(): void {
-            localStorage[List.storageKey] = JSON.stringify(this.items);
+        save(): void {
+            localStorage[List.storageKey] = JSON.stringify(this.items, (key, value) => {
+                if (key == 'list')
+                    return undefined;
+                else
+                    return value;
+            });
         }
 
         // Action on the BUY button
@@ -146,7 +184,6 @@ module Item {
             this.loadList();
 
             var headerText = this.page.find('[data-role=header] h1');
-            var checkboxes = this.list.find('[type=checkbox]');
             var market = TheApplication.activeMarket;
 
             if (market == null) {
@@ -167,6 +204,10 @@ module Item {
     export class Details {
         static pageName = '#itemDetails';
 
+        private save: JQuery;
+
+        private delete: JQuery;
+
         private form: JQuery;
 
         private name: JQuery;
@@ -181,17 +222,74 @@ module Item {
 
         private header: JQuery;
 
-        constructor() {
+        constructor(private list: List) {
             this.form = $(Details.pageName);
 
             this.header = this.form.find('[data-role=header] h1');
             this.description = this.form.find('#itemDescription');
+            this.delete = this.form.find('#deleteItem');
             this.bought = this.form.find('#itemBought');
             this.market = this.form.find('#itemMarket');
             this.created = this.form.find('#itemDate');
+            this.save = this.form.find('#updateItem');
             this.name = this.form.find('#itemName');
 
             this.form.on('pagebeforeshow', () => this.onShow());
+            this.form.on('pageshow', () => this.name.focus());
+
+            this.save.on('click', () => this.onClose());
+            this.delete.on('click', () => this.onDelete());
+            this.name.on('change input', () => this.onValidate());
+        }
+
+        private getName(): string {
+            return (this.name.val() || '').trim();
+        }
+
+        private getDescription(): string {
+            return (this.description.val() || '').trim();
+        }
+
+        private onClose(): void {
+            var name = this.getName();
+            var description = this.getDescription();
+            var item = TheApplication.itemScope;
+
+            if (item == null)
+                this.list.items.push(
+                    new Item({
+                        state: ItemState.NewlyCreated,
+                        created: new Date($.now()),
+                        description: description,
+                        bought: null,
+                        market: null,
+                        name: name,
+                        id: null,
+                    }, this.list));
+            else {
+                item.name = name;
+                item.description = description;
+
+                if (item.state == ItemState.Unchanged)
+                    item.state = ItemState.Modified;
+            }
+
+            this.list.save();
+        }
+
+        private onDelete(): void {
+            TheApplication.itemScope.state = ItemState.Deleted;
+
+            this.list.save();
+        }
+
+        private onValidate(): void {
+            var name = this.getName();
+
+            if (name.length > 0)
+                this.save.removeClass(TheApplication.classDisabled);
+            else
+                this.save.addClass(TheApplication.classDisabled);
         }
 
         private onShow(): void {
@@ -199,15 +297,19 @@ module Item {
 
             if (item == null) {
                 this.header.text('Neues Produkt anlegen');
+                this.save.text('Anlegen');
+                this.delete.hide();
 
                 this.name.val('');
                 this.bought.val('');
                 this.market.val('');
+                this.created.val('');
                 this.description.val('');
-                this.created.val(TheApplication.formatDateTime(new Date($.now())));
             }
             else {
                 this.header.text(item.name);
+                this.save.text('Ändern');
+                this.delete.show();
 
                 this.name.val(item.name);
                 this.description.val(item.description);

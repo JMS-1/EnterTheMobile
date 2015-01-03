@@ -124,6 +124,7 @@ module Market {
             this.form = $(Details.pageName);
 
             this.form.on('pagebeforeshow', () => this.onShow());
+            this.form.on('pageshow', () => this.input.focus());
 
             this.input = this.form.find('#marketText');
             this.save = this.form.find('#updateMarket');
@@ -195,15 +196,17 @@ module Market {
         private onShow(): void {
             if (TheApplication.marketScope == null) {
                 this.header.text('Neuen Markt anlegen');
-                this.input.val('');
                 this.save.text('Anlegen');
                 this.delete.hide();
+
+                this.input.val('');
             }
             else {
                 this.header.text('Marktdaten verändern');
-                this.input.val(TheApplication.marketScope.name);
                 this.save.text('Ändern');
                 this.delete.show();
+
+                this.input.val(TheApplication.marketScope.name);
             }
 
             this.onValidate();
