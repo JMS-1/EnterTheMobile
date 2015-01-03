@@ -8,4 +8,8 @@ label[for=filter] {
   margin-right: 4px;
   margin-top: 0.35em;
 }
+#syncItems {
+  margin-right: 10px;
+  float: right;
+}
 /*# sourceMappingURL=app.css.map */
