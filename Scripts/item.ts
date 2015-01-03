@@ -120,6 +120,8 @@ module Item {
 
         private filter: JQuery;
 
+        private sync: JQuery;
+
         items: IItem[];
 
         constructor() {
@@ -127,18 +129,34 @@ module Item {
             this.action = this.page.find('#goShopping');
             this.list = this.page.find('[data-role=controlgroup]');
             this.filter = this.page.find('#filter');
+            this.sync = this.page.find('#syncItems');
 
             this.page.find('#newItem').on('click', () => TheApplication.itemScope = null);
             this.page.on('pagebeforeshow', () => this.onShow());
 
             this.filter.on('change', () => this.loadList());
             this.action.on('click', () => this.onBuy());
+            this.sync.on('click', () => this.synchronize());
 
             var storedItems: IStoredItem[] = JSON.parse(localStorage[List.storageKey] || null) || [];
 
             this.items = $.map(storedItems, stored => new Item(stored, this));
 
             this.onShow();
+        }
+
+        private synchronize(): void {
+            this.sync.addClass(TheApplication.classDisabled);
+
+            User.getUser('???')
+                .done(userNameInfo => {
+                    // Just in case it failed
+                    if (typeof (userNameInfo) != 'object')
+                        return;
+
+                    // Renable UI
+                    this.sync.removeClass(TheApplication.classDisabled);
+                });
         }
 
         private loadList(): void {

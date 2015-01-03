@@ -64,14 +64,27 @@ var Item;
             this.action = this.page.find('#goShopping');
             this.list = this.page.find('[data-role=controlgroup]');
             this.filter = this.page.find('#filter');
+            this.sync = this.page.find('#syncItems');
             this.page.find('#newItem').on('click', function () { return TheApplication.itemScope = null; });
             this.page.on('pagebeforeshow', function () { return _this.onShow(); });
             this.filter.on('change', function () { return _this.loadList(); });
             this.action.on('click', function () { return _this.onBuy(); });
+            this.sync.on('click', function () { return _this.synchronize(); });
             var storedItems = JSON.parse(localStorage[List.storageKey] || null) || [];
             this.items = $.map(storedItems, function (stored) { return new Item(stored, _this); });
             this.onShow();
         }
+        List.prototype.synchronize = function () {
+            var _this = this;
+            this.sync.addClass(TheApplication.classDisabled);
+            User.getUser('???').done(function (userNameInfo) {
+                // Just in case it failed
+                if (typeof (userNameInfo) != 'object')
+                    return;
+                // Renable UI
+                _this.sync.removeClass(TheApplication.classDisabled);
+            });
+        };
         List.prototype.loadList = function () {
             var _this = this;
             this.list.empty();
