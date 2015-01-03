@@ -108,7 +108,7 @@ module Item {
 
     // The home page of it all
     export class List {
-        private static storageKey = 'ItemList';
+        private static storageKey = 'JMSBuy.ItemList';
 
         static pageName = '#itemList';
 
@@ -122,6 +122,12 @@ module Item {
 
         private sync: JQuery;
 
+        private dialog: JQuery;
+
+        private userId: JQuery;
+
+        private register: JQuery;
+
         items: IItem[];
 
         constructor() {
@@ -130,6 +136,9 @@ module Item {
             this.list = this.page.find('[data-role=controlgroup]');
             this.filter = this.page.find('#filter');
             this.sync = this.page.find('#syncItems');
+            this.dialog = $('#register');
+            this.userId = this.dialog.find('input');
+            this.register = this.dialog.find('a');
 
             this.page.find('#newItem').on('click', () => TheApplication.itemScope = null);
             this.page.on('pagebeforeshow', () => this.onShow());
@@ -138,6 +147,9 @@ module Item {
             this.action.on('click', () => this.onBuy());
             this.sync.on('click', () => this.synchronize());
 
+            this.dialog.popup();
+            this.register.on('click', () => this.tryRegister());
+
             var storedItems: IStoredItem[] = JSON.parse(localStorage[List.storageKey] || null) || [];
 
             this.items = $.map(storedItems, stored => new Item(stored, this));
@@ -145,18 +157,40 @@ module Item {
             this.onShow();
         }
 
-        private synchronize(): void {
-            this.sync.addClass(TheApplication.classDisabled);
+        private tryRegister(): void {
+            this.register.addClass(TheApplication.classDisabled);
 
-            User.getUser('???')
+            var userId = this.userId.val().trim();
+
+            User.getUser(userId)
                 .done(userNameInfo => {
-                    // Just in case it failed
-                    if (typeof (userNameInfo) != 'object')
-                        return;
+                    // Always finish dialog
+                    this.dialog.popup('close');
 
-                    // Renable UI
-                    this.sync.removeClass(TheApplication.classDisabled);
+                    // Just in case it failed
+                    if (typeof (userNameInfo) != 'object') {
+                        this.sync.addClass(TheApplication.classDisabled);
+                    }
+                    else {
+                        User.setUserId(userId);
+
+                        this.onSynchronize();
+                    }
                 });
+        }
+
+        private synchronize(): void {
+            if (User.getUserId().length < 1) {
+                this.register.removeClass(TheApplication.classDisabled);
+                this.dialog.popup('open');
+            }
+            else {
+                this.onSynchronize();
+            }
+        }
+
+        private onSynchronize(): void {
+            this.sync.addClass(TheApplication.classDisabled);
         }
 
         private loadList(): void {

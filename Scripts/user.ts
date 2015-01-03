@@ -1,5 +1,18 @@
 ﻿
 module User {
+    var userIdStoreName = 'JMSBuy.UserIdentifier';
+    var userId = localStorage[userIdStoreName] || '';
+
+    export function getUserId(): string {
+        return userId;
+    };
+
+    export function setUserId(newUserId: string): void {
+        userId = newUserId.trim();
+
+        localStorage[userIdStoreName] = userId;
+    }
+
     export interface IUserName {
         name: string;
     }
@@ -13,5 +26,3 @@ module User {
         });
     }
 }
-
- 

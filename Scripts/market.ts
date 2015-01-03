@@ -44,7 +44,7 @@ module Market {
 
     // The market selection list page
     export class List {
-        private static storageKey = 'MarketList';
+        private static storageKey = 'JMSBuy.MarketList';
 
         private static pageName = '#marketList';
 

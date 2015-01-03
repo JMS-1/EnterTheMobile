@@ -60,7 +60,7 @@ var Market;
             // Configure actions
             this.page.find('#newMarket').on('click', function () { return TheApplication.marketScope = null; });
         };
-        List.storageKey = 'MarketList';
+        List.storageKey = 'JMSBuy.MarketList';
         List.pageName = '#marketList';
         return List;
     })();

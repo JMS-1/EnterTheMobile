@@ -65,25 +65,48 @@ var Item;
             this.list = this.page.find('[data-role=controlgroup]');
             this.filter = this.page.find('#filter');
             this.sync = this.page.find('#syncItems');
+            this.dialog = $('#register');
+            this.userId = this.dialog.find('input');
+            this.register = this.dialog.find('a');
             this.page.find('#newItem').on('click', function () { return TheApplication.itemScope = null; });
             this.page.on('pagebeforeshow', function () { return _this.onShow(); });
             this.filter.on('change', function () { return _this.loadList(); });
             this.action.on('click', function () { return _this.onBuy(); });
             this.sync.on('click', function () { return _this.synchronize(); });
+            this.dialog.popup();
+            this.register.on('click', function () { return _this.tryRegister(); });
             var storedItems = JSON.parse(localStorage[List.storageKey] || null) || [];
             this.items = $.map(storedItems, function (stored) { return new Item(stored, _this); });
             this.onShow();
         }
-        List.prototype.synchronize = function () {
+        List.prototype.tryRegister = function () {
             var _this = this;
-            this.sync.addClass(TheApplication.classDisabled);
-            User.getUser('???').done(function (userNameInfo) {
+            this.register.addClass(TheApplication.classDisabled);
+            var userId = this.userId.val().trim();
+            User.getUser(userId).done(function (userNameInfo) {
+                // Always finish dialog
+                _this.dialog.popup('close');
                 // Just in case it failed
-                if (typeof (userNameInfo) != 'object')
-                    return;
-                // Renable UI
-                _this.sync.removeClass(TheApplication.classDisabled);
+                if (typeof (userNameInfo) != 'object') {
+                    _this.sync.addClass(TheApplication.classDisabled);
+                }
+                else {
+                    User.setUserId(userId);
+                    _this.onSynchronize();
+                }
             });
+        };
+        List.prototype.synchronize = function () {
+            if (User.getUserId().length < 1) {
+                this.register.removeClass(TheApplication.classDisabled);
+                this.dialog.popup('open');
+            }
+            else {
+                this.onSynchronize();
+            }
+        };
+        List.prototype.onSynchronize = function () {
+            this.sync.addClass(TheApplication.classDisabled);
         };
         List.prototype.loadList = function () {
             var _this = this;
@@ -131,7 +154,7 @@ var Item;
                 this.action.text('Einkaufen beenden');
             }
         };
-        List.storageKey = 'ItemList';
+        List.storageKey = 'JMSBuy.ItemList';
         List.pageName = '#itemList';
         return List;
     })();
