@@ -307,6 +307,7 @@
     <Content Include="Scripts\jquery.mobile-1.4.2.js" />
     <Content Include="Scripts\jquery.mobile-1.4.2.min.js" />
     <Content Include="sync.php" />
+    <Content Include="user.php" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
