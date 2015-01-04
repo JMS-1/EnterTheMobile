@@ -1,20 +1,31 @@
 <?php
 	include('connect.php');
 
+	// Zustand eines Produktes, so wie es auch in der Anwendung definiert ist
 	class ItemState {
+		// Das Produkt wurde neu angelegt
         const NewlyCreated = 0;
 
+		// Das Produkt wurde gelöscht
         const Deleted = 1;
 
+		// Die Produktdaten wurden verändert
         const Modified = 2;
 
+		// Das Produkt ist unverändert
         const Unchanged = 3;
     }
 
-	// Begin transaction
+	// Die Anfrage im JSON Format wird ausgewertet
+	$request = file_get_contents('php://input');
+	$json = json_decode($request, true);
+	$userid = $json['userid'];
+	$items = $json['items'];
+
+	// Wir verwenden Transaktionen
 	$con->autocommit(false);
 
-	// All variables needed in bindings
+	// Alle Variablen, die wir in Bindungen verwenden, werden vorab definiert - das macht ein paar Abläufe einfacher
 	$description = null;
 	$created = null;
 	$bought = null;
@@ -23,7 +34,7 @@
 	$name = null;
 	$id = null;
 
-	// Create commands
+	// Die einzelnen Befehle zum Anlegen, Löschen, Ändern und Auslesen werden vorbereitet
 	$insert = $con->prepare('INSERT INTO buyList (userid, item, description, added) VALUES(?, ?, ?, FROM_UNIXTIME(?))');
 	$insert->bind_param('sssi', $userid, $name, $description, $created);
 
@@ -37,14 +48,9 @@
 	$query->bind_param('s', $userid);
 	$query->bind_result($id, $name, $description, $created);
 
-	// Analyse request data
-	$request = file_get_contents('php://input');
-	$json = json_decode($request, true);
-	$userid = $json['userid'];
-	$items = $json['items'];
-
+	// Alle Offline veränderten Produkte werden untersucht
 	foreach($items as $item){
-		// Prepare all bindings - makes code a bit clearer
+		// Wir füllen alle potentiell verwendeten Bindingsvariablen - das macht den Programmcode etwas einfacher
 		$created = strtotime($item['created']);
 		$description = $item['description'];
 		$bought = $item['bought'];
@@ -53,49 +59,49 @@
 		$name = $item['name'];
 		$id = $item['id'];
 
+		// Abhängig vom Zustand ausführen
 		switch ($state){
 			case ItemState::NewlyCreated:{
 				$insert->execute();
-
 				break;
 			}
 			
 			case ItemState::Deleted:{
 				$delete->execute();
-
 				break;
 			}
 
 			case ItemState::Modified:{
-				// Convert JSON date time string to internal number representation
+				// Ein JSON Datum wird hier in der internen Zahldarstellung verwendet
 				if($bought != null)
 					$bought = strtotime($bought);
 
 				$update->execute();
-
 				break;
 			}
 
 			default: {
+				// Aufräumen
 				$insert->close();
 				$delete->close();
 				$update->close();
 				$con->rollback();
 				$con->close();
 
+				// Und ärgern
 				die('Unbekannter Zustand ' . $state);
 			}
 		}
 	}
 
-	// Prepare result
+	// Hier sammeln wir die Produkte, die als Ergebnis gemeldet werden
 	$results = array();
 
-	// Create response query
+	// Produkte des Anwenders aus der Datenbank auslesen
 	$query->execute();
 
-	// All current items
 	while ($query->fetch()) {
+		// Einzelergebnis zusammenstellen
 		$result['created'] = date('c', $created);
 		$result['state'] = ItemState::Unchanged;
 		$result['description'] = $description;
@@ -104,10 +110,11 @@
 		$result['name'] = $name;
 		$result['id'] = $id;
 
+		// Und im Gesamtergebnis sammeln
 		array_push($results, $result);
 	}
 
-	// Finish database
+	// Ressourcen freigeben
 	$insert->close();
 	$delete->close();
 	$update->close();
@@ -115,10 +122,11 @@
 	$con->commit();
 	$con->close();
 
-	// Report response
+	// Wir werden im JSON Format antworten
 	header('Content-Type: application/json');
 
-	$results['items'] = $results;
+	// Ergebnis zusammenstellen und senden
+	$response['items'] = $results;
 
-	echo json_encode($results);
+	echo json_encode($response);
 ?>

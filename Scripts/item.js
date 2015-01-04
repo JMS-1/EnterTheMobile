@@ -54,22 +54,22 @@ var Item;
         Item.nextCount = 0;
         return Item;
     })();
-    _Item.Item = Item;
     var List = (function () {
         function List() {
             var _this = this;
             this.page = $(List.pageName);
-            this.action = this.page.find('#goShopping');
+            this.shopping = this.page.find('#goShopping');
             this.list = this.page.find('[data-role=controlgroup]');
             this.filter = this.page.find('#filter');
             this.sync = this.page.find('#syncItems');
+            this.header = this.page.find('[data-role=header] h1');
             this.dialog = $('#register');
             this.userId = this.dialog.find('input');
             this.register = this.dialog.find('a');
             this.page.find('#newItem').on('click', function () { return TheApplication.itemScope = null; });
             this.page.on('pagebeforeshow', function () { return _this.onShow(); });
             this.filter.on('change', function () { return _this.loadList(); });
-            this.action.on('click', function () { return _this.onBuy(); });
+            this.shopping.on('click', function () { return _this.onBuy(); });
             this.sync.on('click', function () { return _this.synchronize(); });
             this.dialog.popup();
             this.register.on('click', function () { return _this.tryRegister(); });
@@ -87,7 +87,7 @@ var Item;
                     TheApplication.disable(_this.sync);
                 }
                 else {
-                    User.setUserId(userId);
+                    User.setUserId(userId, userNameInfo.name);
                     _this.onSynchronize();
                 }
             });
@@ -144,16 +144,16 @@ var Item;
         };
         List.prototype.onShow = function () {
             this.loadList();
-            var headerText = this.page.find('[data-role=header] h1');
             var market = TheApplication.activeMarket;
             if (market == null) {
-                headerText.text('Deine Einkaufsliste');
-                this.action.text('Einkaufen');
+                var userName = User.getUserName();
+                this.header.text((userName == '') ? 'Deine Einkaufsliste' : userName);
+                this.shopping.text('Einkaufen');
                 TheApplication.enable(this.sync);
             }
             else {
-                headerText.text('Einkaufen bei ' + market.name);
-                this.action.text('Einkaufen beenden');
+                this.header.text('Einkaufen bei ' + market.name);
+                this.shopping.text('Einkaufen beenden');
                 TheApplication.disable(this.sync);
             }
         };
@@ -177,7 +177,7 @@ var Item;
             this.name = this.form.find('#itemName');
             this.form.on('pagebeforeshow', function () { return _this.onShow(); });
             this.form.on('pageshow', function () { return _this.name.focus(); });
-            this.save.on('click', function () { return _this.onClose(); });
+            this.save.on('click', function () { return _this.onSave(); });
             this.delete.on('click', function () { return _this.onDelete(); });
             this.name.on('change input', function () { return _this.onValidate(); });
         }
@@ -187,7 +187,7 @@ var Item;
         Details.prototype.getDescription = function () {
             return (this.description.val() || '').trim();
         };
-        Details.prototype.onClose = function () {
+        Details.prototype.onSave = function () {
             var name = this.getName();
             var description = this.getDescription();
             var item = TheApplication.itemScope;
