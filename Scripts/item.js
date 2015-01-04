@@ -21,6 +21,10 @@ var Item;
                 this.created = new Date((this.created));
             if (typeof (this.bought) == 'string')
                 this.bought = new Date((this.bought));
+            if (typeof (this.id) == 'string')
+                this.id = parseInt((this.id));
+            if (typeof (this.state) == 'string')
+                this.state = parseInt((this.state));
         }
         Item.prototype.appendTo = function (items, list) {
             var _this = this;
@@ -105,7 +109,29 @@ var Item;
             }
         };
         List.prototype.onSynchronize = function () {
+            var _this = this;
             this.sync.addClass(TheApplication.classDisabled);
+            this.updateDatabase().done(function (itemList) {
+                // In error
+                if (typeof (itemList) != 'object')
+                    return;
+                // Make current
+                _this.items = $.map(itemList.items, function (stored) { return new Item(stored); });
+                _this.save();
+                // Re-enable
+                _this.sync.removeClass(TheApplication.classDisabled);
+                // Update UI
+                _this.loadList();
+            });
+        };
+        List.prototype.updateDatabase = function () {
+            var items = this.items.filter(function (item) { return item.state != 3 /* Unchanged */; });
+            return $.ajax({
+                data: JSON.stringify({ userid: User.getUserId(), items: items }),
+                contentType: 'application/json',
+                url: 'sync.php',
+                type: 'POST',
+            });
         };
         List.prototype.loadList = function () {
             var _this = this;
@@ -141,11 +167,13 @@ var Item;
                 // If no market is selected we are in collection mode
                 headerText.text('Deine Einkaufsliste');
                 this.action.text('Einkaufen');
+                this.sync.removeClass(TheApplication.classDisabled);
             }
             else {
                 // After a market is selected we are in buy mode
                 headerText.text('Einkaufen bei ' + market.name);
                 this.action.text('Einkaufen beenden');
+                this.sync.addClass(TheApplication.classDisabled);
             }
         };
         List.storageKey = 'JMSBuy.ItemList';

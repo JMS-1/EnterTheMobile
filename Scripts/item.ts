@@ -66,6 +66,10 @@ module Item {
                 this.created = new Date(<string><any>(this.created));
             if (typeof (this.bought) == 'string')
                 this.bought = new Date(<string><any>(this.bought));
+            if (typeof (this.id) == 'string')
+                this.id = parseInt(<string><any>(this.id));
+            if (typeof (this.state) == 'string')
+                this.state = parseInt(<string><any>(this.state));
         }
 
         appendTo(items: JQuery, list: List): void {
@@ -82,7 +86,7 @@ module Item {
             items.append(this.checker, label);
         }
 
-        private onClick(ev: JQueryEventObject, list:List): void {
+        private onClick(ev: JQueryEventObject, list: List): void {
             if (TheApplication.activeMarket == null) {
                 TheApplication.itemScope = this;
 
@@ -104,6 +108,10 @@ module Item {
                 list.save();
             }
         }
+    }
+
+    interface ISynchronized {
+        items: IStoredItem[];
     }
 
     // The home page of it all
@@ -191,6 +199,34 @@ module Item {
 
         private onSynchronize(): void {
             this.sync.addClass(TheApplication.classDisabled);
+
+            this.updateDatabase()
+                .done(itemList => {
+                    // In error
+                    if (typeof (itemList) != 'object')
+                        return;
+
+                    // Make current
+                    this.items = $.map(itemList.items, stored => new Item(stored));
+                    this.save();
+
+                    // Re-enable
+                    this.sync.removeClass(TheApplication.classDisabled);
+
+                    // Update UI
+                    this.loadList();
+                });
+        }
+
+        private updateDatabase(): JQueryPromise<ISynchronized> {
+            var items = this.items.filter(item => item.state != ItemState.Unchanged);
+
+            return $.ajax({
+                data: JSON.stringify({ userid: User.getUserId(), items: items }),
+                contentType: 'application/json',
+                url: 'sync.php',
+                type: 'POST',
+            });
         }
 
         private loadList(): void {
@@ -238,12 +274,14 @@ module Item {
                 headerText.text('Deine Einkaufsliste');
 
                 this.action.text('Einkaufen');
+                this.sync.removeClass(TheApplication.classDisabled);
             }
             else {
                 // After a market is selected we are in buy mode
                 headerText.text('Einkaufen bei ' + market.name);
 
                 this.action.text('Einkaufen beenden');
+                this.sync.addClass(TheApplication.classDisabled);
             }
         }
     }
