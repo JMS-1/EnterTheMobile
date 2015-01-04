@@ -81,13 +81,15 @@ var Item;
             var _this = this;
             TheApplication.disable(this.register);
             var userId = this.userId.val().trim();
-            User.getUser(userId).done(function (userNameInfo) {
+            User.getUser(userId).done(function (userNameInfoAsString) {
                 _this.dialog.popup('close');
-                if (typeof (userNameInfo) != 'object') {
+                var userNameInfo = TheApplication.getObjectFromResponse(userNameInfoAsString);
+                if (userNameInfo == null) {
                     TheApplication.disable(_this.sync);
                 }
                 else {
                     User.setUserId(userId, userNameInfo.name);
+                    _this.onShow();
                     _this.onSynchronize();
                 }
             });
@@ -104,8 +106,9 @@ var Item;
         List.prototype.onSynchronize = function () {
             var _this = this;
             TheApplication.disable(this.sync);
-            this.updateDatabase().done(function (itemList) {
-                if (typeof (itemList) != 'object')
+            this.updateDatabase().done(function (itemListAsString) {
+                var itemList = TheApplication.getObjectFromResponse(itemListAsString);
+                if (itemList == null)
                     return;
                 _this.items = $.map(itemList.items, function (stored) { return new Item(stored); });
                 _this.save();

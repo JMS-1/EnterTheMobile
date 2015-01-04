@@ -221,11 +221,12 @@ module Item {
             var userId = this.userId.val().trim();
 
             User.getUser(userId)
-                .done(userNameInfo => {
+                .done(userNameInfoAsString => {
                     // Den Dialog schliessen wir immer
                     this.dialog.popup('close');
 
-                    if (typeof (userNameInfo) != 'object') {
+                    var userNameInfo = <User.IUserName>TheApplication.getObjectFromResponse(userNameInfoAsString);
+                    if (userNameInfo == null) {
                         // Bei Fehlern stellen wir sicher, dass wir es nicht noch einmal probieren - erst nach dem nächsten Refresh der Anwendung
                         TheApplication.disable(this.sync);
                     }
@@ -234,6 +235,7 @@ module Item {
                         User.setUserId(userId, userNameInfo.name);
 
                         // Nun können wir die ursprünglich angeforderte Synchronisation mit der Datenbank anfordern
+                        this.onShow();
                         this.onSynchronize();
                     }
                 });
@@ -258,9 +260,10 @@ module Item {
             TheApplication.disable(this.sync);
 
             this.updateDatabase()
-                .done(itemList => {
+                .done(itemListAsString => {
                     // Im Fehlerfall lassen wir die Schaltfläche einfach deaktiviert
-                    if (typeof (itemList) != 'object')
+                    var itemList = <ISynchronized>TheApplication.getObjectFromResponse(itemListAsString);
+                    if (itemList == null)
                         return;
 
                     // Die Informationen aus der Datenbank werden lokal übernommen
@@ -276,7 +279,7 @@ module Item {
         }
 
         // Führt den Aufruf an die Datenbank aus.
-        private updateDatabase(): JQueryPromise<ISynchronized> {
+        private updateDatabase(): JQueryPromise<string> {
             // Es werden nur unveränderte oder neue Produkte übertragen - das reduziert die Datenmenge eventuell erheblich
             var items = this.items.filter(item => item.state != ItemState.Unchanged);
 

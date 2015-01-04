@@ -30,5 +30,13 @@ var TheApplication;
         return formatNumberForDateTime(day) + '.' + formatNumberForDateTime(month) + '. ' + formatNumberForDateTime(hour) + ':' + formatNumberForDateTime(minute);
     }
     TheApplication.formatDateTime = formatDateTime;
+    function getObjectFromResponse(responseString) {
+        var jsonStart = responseString.indexOf('{');
+        var jsonEnd = responseString.lastIndexOf('}');
+        if ((jsonStart < 0) || (jsonEnd != responseString.length - 1))
+            return null;
+        return JSON.parse(responseString.substr(jsonStart));
+    }
+    TheApplication.getObjectFromResponse = getObjectFromResponse;
 })(TheApplication || (TheApplication = {}));
 //# sourceMappingURL=app.js.map
