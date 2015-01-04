@@ -165,9 +165,9 @@ module Market {
 
             // Update UI accordingly
             if (valid)
-                this.save.removeClass(TheApplication.classDisabled);
+                TheApplication.enable(this.save);
             else
-                this.save.addClass(TheApplication.classDisabled);
+                TheApplication.disable(this.save);
         }
 
         // Save the change

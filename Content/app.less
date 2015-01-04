@@ -1,25 +1,29 @@
 ﻿@footerPadding: 4px;
 
+// Die Schaltflkächen im FOOTER sollen nicht ganz an den Rand geklatscht werden
 div[data-role=footer] {
     padding-left: @footerPadding;
     padding-right: @footerPadding;
 }
 
-label[for=filter]{
-    width:auto;
+// Leider wird das nicht berücksichtigt, wenn man eine Schaltfläche ganz nach rechts schiebt
+#syncItems {
+    margin-right: 2.5 * @footerPadding;
+    float: right;
+}
+
+// Unsere einzige Einschränkung der Ergebnismenge ist im Moment auch noch ein wenig kläglich, aber vertretbar
+label[for=filter] {
+    width: auto;
     margin-left: 10px;
     margin-right: 4px;
     margin-top: 0.35em;
 }
 
-#syncItems{
-    margin-right: 10px;
-    float: right;
-}
-
-#register{
-    form{
+// Bei dem Design des Anmeldedialogs ist sicher noch eine Menge Luft nach oben, aber der Margin entfernt zumindest die Grundhäßlichkeit
+#register {
+    form {
         margin-left: 15px;
         margin-right: 15px;
-    }   
+    }
 }

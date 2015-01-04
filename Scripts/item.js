@@ -21,10 +21,6 @@ var Item;
                 this.created = new Date((this.created));
             if (typeof (this.bought) == 'string')
                 this.bought = new Date((this.bought));
-            if (typeof (this.id) == 'string')
-                this.id = parseInt((this.id));
-            if (typeof (this.state) == 'string')
-                this.state = parseInt((this.state));
         }
         Item.prototype.appendTo = function (items, list) {
             var _this = this;
@@ -59,7 +55,6 @@ var Item;
         return Item;
     })();
     _Item.Item = Item;
-    // The home page of it all
     var List = (function () {
         function List() {
             var _this = this;
@@ -84,14 +79,12 @@ var Item;
         }
         List.prototype.tryRegister = function () {
             var _this = this;
-            this.register.addClass(TheApplication.classDisabled);
+            TheApplication.disable(this.register);
             var userId = this.userId.val().trim();
             User.getUser(userId).done(function (userNameInfo) {
-                // Always finish dialog
                 _this.dialog.popup('close');
-                // Just in case it failed
                 if (typeof (userNameInfo) != 'object') {
-                    _this.sync.addClass(TheApplication.classDisabled);
+                    TheApplication.disable(_this.sync);
                 }
                 else {
                     User.setUserId(userId);
@@ -101,7 +94,7 @@ var Item;
         };
         List.prototype.synchronize = function () {
             if (User.getUserId().length < 1) {
-                this.register.removeClass(TheApplication.classDisabled);
+                TheApplication.enable(this.register);
                 this.dialog.popup('open');
             }
             else {
@@ -110,17 +103,13 @@ var Item;
         };
         List.prototype.onSynchronize = function () {
             var _this = this;
-            this.sync.addClass(TheApplication.classDisabled);
+            TheApplication.disable(this.sync);
             this.updateDatabase().done(function (itemList) {
-                // In error
                 if (typeof (itemList) != 'object')
                     return;
-                // Make current
                 _this.items = $.map(itemList.items, function (stored) { return new Item(stored); });
                 _this.save();
-                // Re-enable
-                _this.sync.removeClass(TheApplication.classDisabled);
-                // Update UI
+                TheApplication.enable(_this.sync);
                 _this.loadList();
             });
         };
@@ -146,34 +135,26 @@ var Item;
         List.prototype.save = function () {
             localStorage[List.storageKey] = JSON.stringify(this.items);
         };
-        // Action on the BUY button
         List.prototype.onBuy = function () {
-            // If no market is selected it's time to select it now
             if (TheApplication.activeMarket == null)
                 return true;
-            // Done with market
             TheApplication.activeMarket = null;
-            // Refresh the UI
             this.onShow();
-            // And stay where we are
             return false;
         };
-        // Adapt UI to current operation mode
         List.prototype.onShow = function () {
             this.loadList();
             var headerText = this.page.find('[data-role=header] h1');
             var market = TheApplication.activeMarket;
             if (market == null) {
-                // If no market is selected we are in collection mode
                 headerText.text('Deine Einkaufsliste');
                 this.action.text('Einkaufen');
-                this.sync.removeClass(TheApplication.classDisabled);
+                TheApplication.enable(this.sync);
             }
             else {
-                // After a market is selected we are in buy mode
                 headerText.text('Einkaufen bei ' + market.name);
                 this.action.text('Einkaufen beenden');
-                this.sync.addClass(TheApplication.classDisabled);
+                TheApplication.disable(this.sync);
             }
         };
         List.storageKey = 'JMSBuy.ItemList';
@@ -235,9 +216,9 @@ var Item;
         Details.prototype.onValidate = function () {
             var name = this.getName();
             if (name.length > 0)
-                this.save.removeClass(TheApplication.classDisabled);
+                TheApplication.enable(this.save);
             else
-                this.save.addClass(TheApplication.classDisabled);
+                TheApplication.disable(this.save);
         };
         Details.prototype.onShow = function () {
             var item = TheApplication.itemScope;

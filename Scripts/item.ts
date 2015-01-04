@@ -66,10 +66,6 @@ module Item {
                 this.created = new Date(<string><any>(this.created));
             if (typeof (this.bought) == 'string')
                 this.bought = new Date(<string><any>(this.bought));
-            if (typeof (this.id) == 'string')
-                this.id = parseInt(<string><any>(this.id));
-            if (typeof (this.state) == 'string')
-                this.state = parseInt(<string><any>(this.state));
         }
 
         appendTo(items: JQuery, list: List): void {
@@ -166,7 +162,7 @@ module Item {
         }
 
         private tryRegister(): void {
-            this.register.addClass(TheApplication.classDisabled);
+            TheApplication.disable(this.register);
 
             var userId = this.userId.val().trim();
 
@@ -177,7 +173,7 @@ module Item {
 
                     // Just in case it failed
                     if (typeof (userNameInfo) != 'object') {
-                        this.sync.addClass(TheApplication.classDisabled);
+                        TheApplication.disable(this.sync);
                     }
                     else {
                         User.setUserId(userId);
@@ -189,7 +185,7 @@ module Item {
 
         private synchronize(): void {
             if (User.getUserId().length < 1) {
-                this.register.removeClass(TheApplication.classDisabled);
+                TheApplication.enable(this.register);
                 this.dialog.popup('open');
             }
             else {
@@ -198,7 +194,7 @@ module Item {
         }
 
         private onSynchronize(): void {
-            this.sync.addClass(TheApplication.classDisabled);
+            TheApplication.disable(this.sync);
 
             this.updateDatabase()
                 .done(itemList => {
@@ -211,7 +207,7 @@ module Item {
                     this.save();
 
                     // Re-enable
-                    this.sync.removeClass(TheApplication.classDisabled);
+                    TheApplication.enable(this.sync);
 
                     // Update UI
                     this.loadList();
@@ -274,14 +270,14 @@ module Item {
                 headerText.text('Deine Einkaufsliste');
 
                 this.action.text('Einkaufen');
-                this.sync.removeClass(TheApplication.classDisabled);
+                TheApplication.enable(this.sync);
             }
             else {
                 // After a market is selected we are in buy mode
                 headerText.text('Einkaufen bei ' + market.name);
 
                 this.action.text('Einkaufen beenden');
-                this.sync.addClass(TheApplication.classDisabled);
+                TheApplication.disable(this.sync);
             }
         }
     }
@@ -372,9 +368,9 @@ module Item {
             var name = this.getName();
 
             if (name.length > 0)
-                this.save.removeClass(TheApplication.classDisabled);
+                TheApplication.enable(this.save);
             else
-                this.save.addClass(TheApplication.classDisabled);
+                TheApplication.disable(this.save);
         }
 
         private onShow(): void {

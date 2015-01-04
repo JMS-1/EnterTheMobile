@@ -1,20 +1,23 @@
 var TheApplication;
 (function (TheApplication) {
-    // Global constants
-    TheApplication.classDisabled = 'ui-disabled';
-    // Global context
+    var classDisabled = 'ui-disabled';
     TheApplication.activeMarket = null;
     TheApplication.marketScope = null;
     TheApplication.itemScope = null;
-    // Synchronized startup code
     $(function () {
-        // Item management
         var itemList = new Item.List();
         var itemDetails = new Item.Details(itemList);
-        // Market management
         var marketSelectionList = new Market.List();
         var marketDetails = new Market.Details(marketSelectionList);
     });
+    function disable(nodes) {
+        nodes.addClass(classDisabled);
+    }
+    TheApplication.disable = disable;
+    function enable(nodes) {
+        nodes.removeClass(classDisabled);
+    }
+    TheApplication.enable = enable;
     function formatNumberForDateTime(n) {
         var s = n.toString();
         return (s.length == 2) ? s : ('0' + s);
