@@ -9,3 +9,4 @@
 *.sln
 /packages
 /connect.php
+/publish
