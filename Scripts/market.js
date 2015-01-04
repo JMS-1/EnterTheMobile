@@ -7,10 +7,10 @@ var Market;
         Market.prototype.appendTo = function (items) {
             var _this = this;
             var choose = $('<a/>', { text: this.name, href: Item.List.pageName });
-            var edit = $('<a/>', { href: Details.pageName });
             choose.on('click', function () { return TheApplication.activeMarket = _this; });
+            var edit = $('<a/>', { href: Details.pageName });
             edit.on('click', function () { return TheApplication.marketScope = _this; });
-            items.append($('<li/>').append(choose).append(edit));
+            items.append($('<li/>').append(choose, edit));
         };
         Market.compare = function (left, right) {
             return Market.compareNames(left.name, right.name);
@@ -20,7 +20,6 @@ var Market;
         };
         return Market;
     })();
-    _Market.Market = Market;
     var List = (function () {
         function List() {
             var _this = this;
@@ -61,7 +60,7 @@ var Market;
             this.save = this.form.find('#updateMarket');
             this.delete = this.form.find('#deleteMarket');
             this.header = this.form.find('[data-role=header] h1');
-            this.save.on('click', function () { return _this.onClose(); });
+            this.save.on('click', function () { return _this.onSave(); });
             this.delete.on('click', function () { return _this.onDelete(); });
             this.input.on('change input', function () { return _this.onValidate(); });
         }
@@ -87,7 +86,7 @@ var Market;
             else
                 TheApplication.disable(this.save);
         };
-        Details.prototype.onClose = function () {
+        Details.prototype.onSave = function () {
             var name = this.getName();
             if (TheApplication.marketScope == null)
                 this.list.markets.push(new Market({ name: name }));

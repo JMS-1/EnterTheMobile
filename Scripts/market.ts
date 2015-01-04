@@ -1,19 +1,22 @@
 ﻿
+/*
+  Alles zur Verwaltung der Märkte.
+*/
 module Market {
-    // Market raw data as serialized to store
+    // Die Struktur der Ablage eines Marktes.
     export interface IStoredMarket {
-        // Name of the market
+        // Der Name des Marktes
         name: string;
     }
 
-    // Market effective data
+    // Die interne Repräsentation eines Marktes.
     export interface IMarket extends IStoredMarket {
-        // Create list view row for market including selection and edit using split mode
+        // Erstellt einen Listeneintrag für einen Markt.
         appendTo(items: JQuery): void;
     }
 
-    // Market effective data implementation
-    export class Market implements IMarket {
+    // Die Implementierung eines Marktes
+    class Market implements IMarket {
         constructor(fromStore: IStoredMarket) {
             this.name = fromStore.name;
         }
@@ -21,37 +24,43 @@ module Market {
         name: string;
 
         appendTo(items: JQuery): void {
+            // Die Anzeige des Namens zu Auswahl
             var choose = $('<a/>', { text: this.name, href: Item.List.pageName });
-            var edit = $('<a/>', { href: Details.pageName });
-
             choose.on('click', () => TheApplication.activeMarket = this);
+
+            // Die Schaltfläche zur Pflege der Daten
+            var edit = $('<a/>', { href: Details.pageName });
             edit.on('click', () => TheApplication.marketScope = this);
 
-            items
-                .append($('<li/>')
-                    .append(choose)
-                    .append(edit));
+            items.append($('<li/>').append(choose, edit));
         }
 
+        // Vergleicht die Namen zweier Märkte.
         static compare(left: IStoredMarket, right: IStoredMarket): number {
             return Market.compareNames(left.name, right.name);
         }
 
+        // Vergleicht die Namen zweier Märkte.
         static compareNames(left: string, right: string): number {
             return left.localeCompare(right, undefined, { sensitivity: 'base' });
         }
     }
 
-    // The market selection list page
+    // Die Auswahlliste der Märkte.
     export class List {
+        // Unter diesem Namen wir die Marktliste in der lokalen Ablage gespeichert
         private static storageKey = 'JMSBuy.MarketList';
 
+        // Der Name der Marktliste im DOM
         private static pageName = '#marketList';
 
+        // Die Liste der Märkte
         private list: JQuery;
 
+        // Die Seite in der Oberfläche
         private page: JQuery;
 
+        // Alle zurzeit bekannten Märkte
         markets: IMarket[];
 
         constructor() {
@@ -61,63 +70,60 @@ module Market {
             this.page.on('pagebeforeshow', () => this.onShow());
         }
 
-        // Update the list
+        // Aktualisiert die Liste der Märkte
         private onShow(): void {
-            // Reset current list view
             this.list.empty();
 
-            // Reestablish list
+            // Die Anzeige wird neu aufgebaut
             $.each(this.markets, (i, market) => market.appendTo(this.list));
 
-            // Make sure list is mobile enhanced
+            // Und schließlich die Styles aktualisiert
             this.list.listview('refresh');
         }
 
-        // Update local storage and (!) display
+        // Aktualisiert die lokale Ablage.
         save(): void {
-            // Make sure list is always ordered
+            // Die Speicherung erfolgt grundsätzlich alphabetisch sortiert
             this.markets.sort(Market.compare);
 
-            // Convert to storage format
             localStorage[List.storageKey] = JSON.stringify(this.markets);
         }
 
-        // Call once when the page is created
+        // Wird einmalig beim Erzeugen der Seite aufgerufen.
         private onCreated(): void {
-            // Locate item list
             this.list = this.page.find('[data-role=listview]');
 
-            // Recover market list from local storage
+            // Lokale Ablage auslesen
             var storedMarkets: IStoredMarket[] = JSON.parse(localStorage[List.storageKey] || null) || [];
 
-            // Create production classes from pure serialisation
+            // Rohdaten aus der Ablage in nützliche Objekte wandeln
             this.markets = $.map(storedMarkets, stored => new Market(stored));
 
-            // Process as change
+            // Sortieren und zurückspeichern - nur zur Sicherheit
             this.save();
 
-            // Configure actions
             this.page.find('#newMarket').on('click', () => TheApplication.marketScope = null);
         }
     }
 
-    // The market details page
+    // Das Formular zur Pflege der Daten eines Marktes.
     export class Details {
+        // Der Name des Formulars im DOM
         static pageName = '#marketDetail';
 
-        // Update action - either create new or modify existing
+        // Die Schaltfläche zur Aktualisierung der Eingaben
         private save: JQuery;
 
-        // Delete action - only for existing
+        // Die Schaltfläche zum Löschen eine Marktes
         private delete: JQuery;
 
-        // Header text element
+        // Die Kopfzeile im DOM
         private header: JQuery;
 
-        // Name input element
+        // Das Eingabeelement für den Namen
         private input: JQuery;
 
-        // The UI
+        // Das Formular als Ganzes
         private form: JQuery;
 
         constructor(private list: List) {
@@ -131,60 +137,63 @@ module Market {
             this.delete = this.form.find('#deleteMarket');
             this.header = this.form.find('[data-role=header] h1');
 
-            this.save.on('click', () => this.onClose());
+            this.save.on('click', () => this.onSave());
             this.delete.on('click', () => this.onDelete());
             this.input.on('change input', () => this.onValidate());
         }
 
+        // Ermittelt den aktuellen Namen des Marktes.
         private getName(): string {
             return (this.input.val() || '').trim();
         }
 
-        // Validate the name
+        // Eine Konsistenzprüfung für den Namen.
         private onValidate(): void {
             var valid = true;
             var name = this.getName();
 
             if (name.length < 1)
-                // Name must not be empty
+                // Der Name darf nicht leer sein
                 valid = false;
             else
+                // Und muss eindeutig sein
                 $.each(this.list.markets, (i, market) => {
-                    // Name not in use
+                    // Keine Übereinstimmung
                     if (Market.compareNames(name, market.name) != 0)
                         return true;
 
-                    // This is the one we are modifying
+                    // Das sind wir selbst
                     if (market === TheApplication.marketScope)
                         return true;
 
-                    // Name clash
+                    // Ups, da haben wir eine Duplette gefunden
                     valid = false;
                     return false;
                 });
 
-            // Update UI accordingly
+            // Speichern ist nur bei einem gültigen Namen möglich
             if (valid)
                 TheApplication.enable(this.save);
             else
                 TheApplication.disable(this.save);
         }
 
-        // Save the change
-        private onClose(): void {
+        // Speichert den Markt.
+        private onSave(): void {
             var name = this.getName();
 
             if (TheApplication.marketScope == null)
-                // Create new
+                // Ein neuer Markt wird angelegt
                 this.list.markets.push(new Market({ name: name }));
             else
-                // Update existing
+                // Ein existierender Markt wird verändert
                 TheApplication.marketScope.name = name;
 
+            // Die lokale Ablage wird immer unmittelbar aktualisiert
             this.list.save();
         }
 
-        // Delete the current market
+        // Entfernt den gerade bearbeiteten Markt.
         private onDelete(): void {
             var index = this.list.markets.indexOf(TheApplication.marketScope);
 
@@ -192,9 +201,10 @@ module Market {
             this.list.save();
         }
 
-        // Update UI according to current mode of operation
+        // Zeigt das Formular an.
         private onShow(): void {
             if (TheApplication.marketScope == null) {
+                // Ein leeres Formular
                 this.header.text('Neuen Markt anlegen');
                 this.save.text('Anlegen');
                 this.delete.hide();
@@ -202,6 +212,7 @@ module Market {
                 this.input.val('');
             }
             else {
+                // Ein Formular mit den Daten eines existierenden Marktes
                 this.header.text('Marktdaten verändern');
                 this.save.text('Ändern');
                 this.delete.show();
@@ -209,6 +220,7 @@ module Market {
                 this.input.val(TheApplication.marketScope.name);
             }
 
+            // In jedem Fall prüfen wir einmal - beim Neuanlegen wird nun die Schaltfläche zum Speichern deaktiviert
             this.onValidate();
         }
     }
