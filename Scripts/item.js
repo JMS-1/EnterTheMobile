@@ -8,8 +8,7 @@ var Item;
     })(_Item.ItemState || (_Item.ItemState = {}));
     var ItemState = _Item.ItemState;
     var Item = (function () {
-        function Item(stored, list) {
-            this.list = list;
+        function Item(stored) {
             this.seq = 'itm' + (++Item.nextCount);
             this.id = stored.id;
             this.name = stored.name;
@@ -23,17 +22,17 @@ var Item;
             if (typeof (this.bought) == 'string')
                 this.bought = new Date((this.bought));
         }
-        Item.prototype.appendTo = function (items) {
+        Item.prototype.appendTo = function (items, list) {
             var _this = this;
             if (this.state == 1 /* Deleted */)
                 return;
             this.checker = $('<input/>', { type: 'checkbox', name: this.seq, id: this.seq });
             this.checker.prop('checked', this.market != null);
-            this.checker.on('change', function (ev) { return _this.onClick(ev); });
+            this.checker.on('change', function (ev) { return _this.onClick(ev, list); });
             var label = $('<label/>', { text: this.name, title: this.description, 'for': this.seq });
             items.append(this.checker, label);
         };
-        Item.prototype.onClick = function (ev) {
+        Item.prototype.onClick = function (ev, list) {
             if (TheApplication.activeMarket == null) {
                 TheApplication.itemScope = this;
                 $.mobile.changePage(Details.pageName, { transition: 'none' });
@@ -49,7 +48,7 @@ var Item;
                 }
                 if (this.state == 3 /* Unchanged */)
                     this.state = 2 /* Modified */;
-                this.list.save();
+                list.save();
             }
         };
         Item.nextCount = 0;
@@ -76,7 +75,7 @@ var Item;
             this.dialog.popup();
             this.register.on('click', function () { return _this.tryRegister(); });
             var storedItems = JSON.parse(localStorage[List.storageKey] || null) || [];
-            this.items = $.map(storedItems, function (stored) { return new Item(stored, _this); });
+            this.items = $.map(storedItems, function (stored) { return new Item(stored); });
             this.onShow();
         }
         List.prototype.tryRegister = function () {
@@ -114,17 +113,12 @@ var Item;
             var all = (this.filter.val() == 1);
             $.each(this.items, function (i, item) {
                 if (all || (item.market == null))
-                    item.appendTo(_this.list);
+                    item.appendTo(_this.list, _this);
             });
             this.list.trigger('create');
         };
         List.prototype.save = function () {
-            localStorage[List.storageKey] = JSON.stringify(this.items, function (key, value) {
-                if (key == 'list')
-                    return undefined;
-                else
-                    return value;
-            });
+            localStorage[List.storageKey] = JSON.stringify(this.items);
         };
         // Action on the BUY button
         List.prototype.onBuy = function () {
@@ -197,7 +191,7 @@ var Item;
                     market: null,
                     name: name,
                     id: null,
-                }, this.list));
+                }));
             else {
                 item.name = name;
                 item.description = description;

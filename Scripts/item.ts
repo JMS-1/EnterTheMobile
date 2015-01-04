@@ -27,7 +27,7 @@ module Item {
     }
 
     export interface IItem extends IStoredItem {
-        appendTo(items: JQuery): void;
+        appendTo(items: JQuery, list: List): void;
     }
 
     export class Item implements IItem {
@@ -51,7 +51,7 @@ module Item {
 
         private checker: JQuery;
 
-        constructor(stored: IStoredItem, private list: List) {
+        constructor(stored: IStoredItem) {
             this.seq = 'itm' + (++Item.nextCount);
 
             this.id = stored.id;
@@ -68,21 +68,21 @@ module Item {
                 this.bought = new Date(<string><any>(this.bought));
         }
 
-        appendTo(items: JQuery): void {
+        appendTo(items: JQuery, list: List): void {
             if (this.state == ItemState.Deleted)
                 return;
 
             this.checker = $('<input/>', { type: 'checkbox', name: this.seq, id: this.seq });
             this.checker.prop('checked', this.market != null);
 
-            this.checker.on('change', ev => this.onClick(ev));
+            this.checker.on('change', ev => this.onClick(ev, list));
 
             var label = $('<label/>', { text: this.name, title: this.description, 'for': this.seq });
 
             items.append(this.checker, label);
         }
 
-        private onClick(ev: JQueryEventObject): void {
+        private onClick(ev: JQueryEventObject, list:List): void {
             if (TheApplication.activeMarket == null) {
                 TheApplication.itemScope = this;
 
@@ -101,7 +101,7 @@ module Item {
                 if (this.state == ItemState.Unchanged)
                     this.state = ItemState.Modified;
 
-                this.list.save();
+                list.save();
             }
         }
     }
@@ -152,7 +152,7 @@ module Item {
 
             var storedItems: IStoredItem[] = JSON.parse(localStorage[List.storageKey] || null) || [];
 
-            this.items = $.map(storedItems, stored => new Item(stored, this));
+            this.items = $.map(storedItems, stored => new Item(stored));
 
             this.onShow();
         }
@@ -200,19 +200,14 @@ module Item {
 
             $.each(this.items, (i, item) => {
                 if (all || (item.market == null))
-                    item.appendTo(this.list);
+                    item.appendTo(this.list, this);
             });
 
             this.list.trigger('create');
         }
 
         save(): void {
-            localStorage[List.storageKey] = JSON.stringify(this.items, (key, value) => {
-                if (key == 'list')
-                    return undefined;
-                else
-                    return value;
-            });
+            localStorage[List.storageKey] = JSON.stringify(this.items);
         }
 
         // Action on the BUY button
@@ -317,7 +312,7 @@ module Item {
                         market: null,
                         name: name,
                         id: null,
-                    }, this.list));
+                    }));
             else {
                 item.name = name;
                 item.description = description;
