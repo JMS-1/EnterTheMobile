@@ -9,7 +9,6 @@ var Item;
     var ItemState = _Item.ItemState;
     var Item = (function () {
         function Item(stored) {
-            this.seq = 'itm' + (++Item.nextCount);
             this.id = stored.id;
             this.name = stored.name;
             this.state = stored.state;
@@ -26,19 +25,20 @@ var Item;
             var _this = this;
             if (this.state == 1 /* Deleted */)
                 return;
-            this.checker = $('<input/>', { type: 'checkbox', name: this.seq, id: this.seq });
-            this.checker.prop('checked', this.market != null);
-            this.checker.on('change', function (ev) { return _this.onClick(ev, list); });
-            var label = $('<label/>', { text: this.name, title: this.description, 'for': this.seq });
-            items.append(this.checker, label);
+            var seq = 'itm' + (++Item.nextCount);
+            var checker = $('<input/>', { type: 'checkbox', name: seq, id: seq });
+            checker.prop('checked', this.market != null);
+            checker.on('change', function (ev) { return _this.onClick(ev, list, checker); });
+            var label = $('<label/>', { text: this.name, title: this.description, 'for': seq });
+            items.append(checker, label);
         };
-        Item.prototype.onClick = function (ev, list) {
+        Item.prototype.onClick = function (ev, list, checker) {
             if (TheApplication.activeMarket == null) {
                 TheApplication.itemScope = this;
                 $.mobile.changePage(Details.pageName, { transition: 'none' });
             }
             else {
-                if (this.checker.is(':checked')) {
+                if (checker.is(':checked')) {
                     this.market = TheApplication.activeMarket.name;
                     this.bought = new Date($.now());
                 }

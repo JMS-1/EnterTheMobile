@@ -33,9 +33,9 @@ var TheApplication;
     function getObjectFromResponse(responseString) {
         var jsonStart = responseString.indexOf('{');
         var jsonEnd = responseString.lastIndexOf('}');
-        if ((jsonStart < 0) || (jsonEnd != responseString.length - 1))
+        if ((jsonStart < 0) || (jsonEnd < jsonStart))
             return null;
-        return JSON.parse(responseString.substr(jsonStart));
+        return JSON.parse(responseString.substr(jsonStart, jsonEnd + 1 - jsonStart));
     }
     TheApplication.getObjectFromResponse = getObjectFromResponse;
 })(TheApplication || (TheApplication = {}));

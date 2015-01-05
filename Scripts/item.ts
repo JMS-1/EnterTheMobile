@@ -56,8 +56,6 @@ module Item {
         private static nextCount = 0;
 
         // Der eindeutige Elementname im DOM.
-        private seq: string;
-
         id: number;
 
         state: ItemState;
@@ -72,12 +70,7 @@ module Item {
 
         market: string;
 
-        // Das Auswahlelement zum Produk.
-        private checker: JQuery;
-
         constructor(stored: IStoredItem) {
-            this.seq = 'itm' + (++Item.nextCount);
-
             this.id = stored.id;
             this.name = stored.name;
             this.state = stored.state;
@@ -99,18 +92,19 @@ module Item {
                 return;
 
             // Das Auswahlfeld
-            this.checker = $('<input/>', { type: 'checkbox', name: this.seq, id: this.seq });
-            this.checker.prop('checked', this.market != null);
-            this.checker.on('change', ev => this.onClick(ev, list));
+            var seq = 'itm' + (++Item.nextCount);
+            var checker = $('<input/>', { type: 'checkbox', name: seq, id: seq });
+            checker.prop('checked', this.market != null);
+            checker.on('change', ev => this.onClick(ev, list, checker));
 
             // Die Daten zum Produkt, so wie sie zur Auswahl angeboten werden
-            var label = $('<label/>', { text: this.name, title: this.description, 'for': this.seq });
+            var label = $('<label/>', { text: this.name, title: this.description, 'for': seq });
 
-            items.append(this.checker, label);
+            items.append(checker, label);
         }
 
         // Wird bei der Auswahl des Produktes aktiviert.
-        private onClick(ev: JQueryEventObject, list: List): void {
+        private onClick(ev: JQueryEventObject, list: List, checker: JQuery): void {
             if (TheApplication.activeMarket == null) {
                 // Sind wir gerade nicht beim Einkaufen, so können die Produktdaten verändert werden
                 TheApplication.itemScope = this;
@@ -119,7 +113,7 @@ module Item {
             }
             else {
                 // Während des Einkaufens wird die Marktzuordnung einfach verändert
-                if (this.checker.is(':checked')) {
+                if (checker.is(':checked')) {
                     this.market = TheApplication.activeMarket.name;
                     this.bought = new Date($.now());
                 }
