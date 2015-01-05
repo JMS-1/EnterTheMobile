@@ -70,6 +70,7 @@
       <DependentUpon>app.css</DependentUpon>
     </Content>
     <Content Include="collect.cmd" />
+    <Content Include="README.md" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -301,6 +302,7 @@
     <Content Include="Content\jquery.mobile.theme-1.4.2.css" />
     <Content Include="Content\jquery.mobile.theme-1.4.2.min.css" />
     <Content Include="database.sql" />
+    <Content Include="homeicon.png" />
     <Content Include="index.html" />
     <Content Include="packages.config" />
     <None Include="Scripts\jquery-2.1.1.intellisense.js" />

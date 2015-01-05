@@ -2,6 +2,7 @@ mkdir publish
 xcopy /y index.html publish
 xcopy /y sync.php publish
 xcopy /y user.php publish
+xcopy /y homeicon.png publish
 
 mkdir publish\content
 xcopy /y Content\app.css publish\content
