@@ -55,7 +55,6 @@ var Market;
             this.list = list;
             this.form = $(Details.pageName);
             this.form.on('pagebeforeshow', function () { return _this.onShow(); });
-            this.form.on('pageshow', function () { return _this.input.focus(); });
             this.input = this.form.find('#marketText');
             this.save = this.form.find('#updateMarket');
             this.delete = this.form.find('#deleteMarket');

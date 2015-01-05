@@ -171,13 +171,9 @@ var Item;
             this.header = this.form.find('[data-role=header] h1');
             this.description = this.form.find('#itemDescription');
             this.delete = this.form.find('#deleteItem');
-            this.bought = this.form.find('#itemBought');
-            this.market = this.form.find('#itemMarket');
-            this.created = this.form.find('#itemDate');
             this.save = this.form.find('#updateItem');
             this.name = this.form.find('#itemName');
             this.form.on('pagebeforeshow', function () { return _this.onShow(); });
-            this.form.on('pageshow', function () { return _this.name.focus(); });
             this.save.on('click', function () { return _this.onSave(); });
             this.delete.on('click', function () { return _this.onDelete(); });
             this.name.on('change input', function () { return _this.onValidate(); });
@@ -228,9 +224,6 @@ var Item;
                 this.save.text('Anlegen');
                 this.delete.hide();
                 this.name.val('');
-                this.bought.val('');
-                this.market.val('');
-                this.created.val('');
                 this.description.val('');
             }
             else {
@@ -239,16 +232,8 @@ var Item;
                 this.delete.show();
                 this.name.val(item.name);
                 this.description.val(item.description);
-                this.created.val(TheApplication.formatDateTime(item.created));
-                if (item.bought == null) {
-                    this.bought.val('');
-                    this.market.val('');
-                }
-                else {
-                    this.bought.val(TheApplication.formatDateTime(item.bought));
-                    this.market.val(item.market);
-                }
             }
+            this.onValidate();
         };
         Details.pageName = '#itemDetails';
         return Details;

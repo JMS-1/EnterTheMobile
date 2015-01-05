@@ -367,15 +367,6 @@ module Item {
         // Das Eingabefeld für die Beschreibung des Produktes
         private description: JQuery;
 
-        // Das Anzeigefeld mit dem Zeitpunkt, an dem das Produkt angelegt wurde
-        private created: JQuery;
-
-        // Das Anzeigefeld mit dem Zeitpunkt, an dem das Produkt gekauft wurde
-        private bought: JQuery;
-
-        // Das Anzeigefeld mit dem Namen des Marktes, in dem das Produkt gekauft wurde
-        private market: JQuery;
-
         // Die Überschrift im DOM
         private header: JQuery;
 
@@ -385,14 +376,10 @@ module Item {
             this.header = this.form.find('[data-role=header] h1');
             this.description = this.form.find('#itemDescription');
             this.delete = this.form.find('#deleteItem');
-            this.bought = this.form.find('#itemBought');
-            this.market = this.form.find('#itemMarket');
-            this.created = this.form.find('#itemDate');
             this.save = this.form.find('#updateItem');
             this.name = this.form.find('#itemName');
 
             this.form.on('pagebeforeshow', () => this.onShow());
-            this.form.on('pageshow', () => this.name.focus());
 
             this.save.on('click', () => this.onSave());
             this.delete.on('click', () => this.onDelete());
@@ -469,9 +456,6 @@ module Item {
                 this.delete.hide();
 
                 this.name.val('');
-                this.bought.val('');
-                this.market.val('');
-                this.created.val('');
                 this.description.val('');
             }
             else {
@@ -482,18 +466,10 @@ module Item {
 
                 this.name.val(item.name);
                 this.description.val(item.description);
-                this.created.val(TheApplication.formatDateTime(item.created));
-
-                // Ist das Produkt bereits gekauft müssen wird einige kleinere Anpassungen der Anzeige vornehmen
-                if (item.bought == null) {
-                    this.bought.val('');
-                    this.market.val('');
-                }
-                else {
-                    this.bought.val(TheApplication.formatDateTime(item.bought));
-                    this.market.val(item.market);
-                }
             }
+
+            // Immer einmal prüfen
+            this.onValidate();
         }
     }
 }

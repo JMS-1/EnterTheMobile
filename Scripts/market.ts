@@ -130,7 +130,6 @@ module Market {
             this.form = $(Details.pageName);
 
             this.form.on('pagebeforeshow', () => this.onShow());
-            this.form.on('pageshow', () => this.input.focus());
 
             this.input = this.form.find('#marketText');
             this.save = this.form.find('#updateMarket');
