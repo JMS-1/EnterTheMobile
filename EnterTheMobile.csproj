@@ -71,6 +71,7 @@
     </Content>
     <Content Include="collect.cmd" />
     <Content Include="README.md" />
+    <Content Include="cache.manifest" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
