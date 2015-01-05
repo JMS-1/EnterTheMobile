@@ -1,5 +1,5 @@
 mkdir publish
-xcopy /y index.html publish
+xcopy /y home.html publish
 xcopy /y sync.php publish
 xcopy /y user.php publish
 xcopy /y homeicon.png publish
