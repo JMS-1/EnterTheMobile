@@ -86,7 +86,7 @@ var Item;
                 if (typeof (userNameInfo) == 'string') {
                     TheApplication.disable(_this.sync);
                 }
-                else {
+                else if (userNameInfo.name.length > 0) {
                     User.setUserId(userId, userNameInfo.name);
                     _this.onShow();
                     _this.onSynchronize();

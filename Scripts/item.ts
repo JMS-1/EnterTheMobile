@@ -219,11 +219,11 @@ module Item {
                     // Den Dialog schliessen wir immer
                     this.dialog.popup('close');
 
-                    if (typeof(userNameInfo) == 'string') {
+                    if (typeof (userNameInfo) == 'string') {
                         // Bei Fehlern stellen wir sicher, dass wir es nicht noch einmal probieren - erst nach dem nächsten Refresh der Anwendung
                         TheApplication.disable(this.sync);
                     }
-                    else {
+                    else if (userNameInfo.name.length > 0) {
                         // Die Benutzerkennung wurde bestätigt
                         User.setUserId(userId, userNameInfo.name);
 
@@ -255,7 +255,7 @@ module Item {
             this.updateDatabase()
                 .done(itemList => {
                     // Im Fehlerfall lassen wir die Schaltfläche einfach deaktiviert
-                    if (typeof(itemList) == 'string')
+                    if (typeof (itemList) == 'string')
                         return;
 
                     // Die Informationen aus der Datenbank werden lokal übernommen
