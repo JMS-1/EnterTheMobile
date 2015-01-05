@@ -304,7 +304,7 @@
     <Content Include="Content\jquery.mobile.theme-1.4.2.min.css" />
     <Content Include="database.sql" />
     <Content Include="homeicon.png" />
-    <Content Include="home.html" />
+    <Content Include="start.html" />
     <Content Include="packages.config" />
     <None Include="Scripts\jquery-2.1.1.intellisense.js" />
     <Content Include="Scripts\jquery-2.1.1.js" />

@@ -1,8 +1,8 @@
 CACHE MANIFEST
-# Ver 1.3
+# Ver 1.4
 
 CACHE:
-home.html
+start.html
 homeicon.png
 Content/app.css
 Content/jquery.mobile-1.4.2.css
