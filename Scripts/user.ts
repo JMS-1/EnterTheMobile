@@ -35,7 +35,7 @@ module User {
     }
 
     // Startet eine asynchrone Anmeldung.
-    export function getUser(userid: string): JQueryPromise<string> {
+    export function getUser(userid: string): JQueryPromise<IUserName> {
         return $.ajax({
             data: JSON.stringify({ userid: userid }),
             contentType: 'application/json',

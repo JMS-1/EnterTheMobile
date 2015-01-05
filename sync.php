@@ -122,6 +122,9 @@
 	$con->commit();
 	$con->close();
 
+	// Wir werden im JSON Format antworten
+	header('Content-Type: application/json');
+
 	// Ergebnis zusammenstellen und senden
 	$response['items'] = $results;
 

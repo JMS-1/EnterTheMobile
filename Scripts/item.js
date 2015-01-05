@@ -81,10 +81,9 @@ var Item;
             var _this = this;
             TheApplication.disable(this.register);
             var userId = this.userId.val().trim();
-            User.getUser(userId).done(function (userNameInfoAsString) {
+            User.getUser(userId).done(function (userNameInfo) {
                 _this.dialog.popup('close');
-                var userNameInfo = TheApplication.getObjectFromResponse(userNameInfoAsString);
-                if (userNameInfo == null) {
+                if (typeof (userNameInfo) == 'string') {
                     TheApplication.disable(_this.sync);
                 }
                 else {
@@ -106,9 +105,8 @@ var Item;
         List.prototype.onSynchronize = function () {
             var _this = this;
             TheApplication.disable(this.sync);
-            this.updateDatabase().done(function (itemListAsString) {
-                var itemList = TheApplication.getObjectFromResponse(itemListAsString);
-                if (itemList == null)
+            this.updateDatabase().done(function (itemList) {
+                if (typeof (itemList) == 'string')
                     return;
                 _this.items = $.map(itemList.items, function (stored) { return new Item(stored); });
                 _this.save();

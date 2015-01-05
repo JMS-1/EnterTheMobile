@@ -215,12 +215,11 @@ module Item {
             var userId = this.userId.val().trim();
 
             User.getUser(userId)
-                .done(userNameInfoAsString => {
+                .done(userNameInfo => {
                     // Den Dialog schliessen wir immer
                     this.dialog.popup('close');
 
-                    var userNameInfo = <User.IUserName>TheApplication.getObjectFromResponse(userNameInfoAsString);
-                    if (userNameInfo == null) {
+                    if (typeof(userNameInfo) == 'string') {
                         // Bei Fehlern stellen wir sicher, dass wir es nicht noch einmal probieren - erst nach dem nächsten Refresh der Anwendung
                         TheApplication.disable(this.sync);
                     }
@@ -254,10 +253,9 @@ module Item {
             TheApplication.disable(this.sync);
 
             this.updateDatabase()
-                .done(itemListAsString => {
+                .done(itemList => {
                     // Im Fehlerfall lassen wir die Schaltfläche einfach deaktiviert
-                    var itemList = <ISynchronized>TheApplication.getObjectFromResponse(itemListAsString);
-                    if (itemList == null)
+                    if (typeof(itemList) == 'string')
                         return;
 
                     // Die Informationen aus der Datenbank werden lokal übernommen
@@ -273,7 +271,7 @@ module Item {
         }
 
         // Führt den Aufruf an die Datenbank aus.
-        private updateDatabase(): JQueryPromise<string> {
+        private updateDatabase(): JQueryPromise<ISynchronized> {
             // Es werden nur unveränderte oder neue Produkte übertragen - das reduziert die Datenmenge eventuell erheblich
             var items = this.items.filter(item => item.state != ItemState.Unchanged);
 

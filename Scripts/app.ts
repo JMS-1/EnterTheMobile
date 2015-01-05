@@ -47,16 +47,4 @@ module TheApplication {
 
         return formatNumberForDateTime(day) + '.' + formatNumberForDateTime(month) + '. ' + formatNumberForDateTime(hour) + ':' + formatNumberForDateTime(minute);
     }
-
-    // Rekonstruiert ein JSON Objekt aus einer Antwort des Web-Servers.
-    export function getObjectFromResponse(responseString: string): any {
-        // Im Fehlerfall lassen wir die Schaltfläche einfach deaktiviert
-        var jsonStart = responseString.indexOf('{');
-        var jsonEnd = responseString.lastIndexOf('}');
-        if ((jsonStart < 0) || (jsonEnd < jsonStart))
-            return null;
-
-        // Rekonstruieren
-        return JSON.parse(responseString.substr(jsonStart, jsonEnd + 1 - jsonStart));
-    }
 }

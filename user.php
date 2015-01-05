@@ -20,6 +20,9 @@
 	$qryById->close();
 	$con->close();
   
+	// Wir werden im JSON Format antworten
+	header('Content-Type: application/json');
+
 	// Antwort aufsetzen und im JSON Format senden
 	$result['name'] = $name;
 
