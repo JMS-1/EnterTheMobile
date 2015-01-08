@@ -1,18 +1,18 @@
 CACHE MANIFEST
-# Ver 1.7
+# Ver 1.8
 
 CACHE:
 start.html
 homeicon.png
-Content/app.css
-Content/jquery.mobile-1.4.2.css
-Content/images/ajax-loader.gif
-Scripts/jquery-2.1.1.min.js
-Scripts/jquery.mobile-1.4.2.min.js
-Scripts/user.js
-Scripts/item.js
-Scripts/market.js
-Scripts/app.js
+content/app.css
+content/jquery.mobile-1.4.2.css
+content/images/ajax-loader.gif
+scripts/jquery-2.1.1.min.js
+scripts/jquery.mobile-1.4.2.min.js
+scripts/user.js
+scripts/item.js
+scripts/market.js
+scripts/app.js
 
 NETWORK:
 user.php
