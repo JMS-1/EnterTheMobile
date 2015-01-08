@@ -12,18 +12,21 @@ div[data-role=footer] {
     float: right;
 }
 
-// Unsere einzige Einschränkung der Ergebnismenge ist im Moment auch noch ein wenig kläglich, aber vertretbar
-label[for=filter] {
-    width: auto;
-    margin-left: 10px;
-    margin-right: 4px;
-    margin-top: 0.35em;
-}
-
 // Bei dem Design des Anmeldedialogs ist sicher noch eine Menge Luft nach oben, aber der Margin entfernt zumindest die Grundhäßlichkeit
 #register {
     form {
         margin-left: 15px;
         margin-right: 15px;
     }
+}
+
+// Soviel Platz wie möglich für die Überschriften.
+.ui-title {
+    margin-left: 5px !important;
+    margin-right: 5px !important;
+}
+
+// Ein ganz klein wenig aufhübschen des Filters.
+label[for='showAll'], label[for='showSome'] {
+    width: 4em !important;
 }

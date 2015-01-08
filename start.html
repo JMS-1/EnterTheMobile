@@ -24,9 +24,9 @@
     <div class="ui-corner-all" id="register" data-role="popup" data-theme="a">
         <form>
             <div>
-                <h1>Einmalige Anmeldung</h1>
+                <h1>Anmeldung</h1>
                 <label class="ui-hidden-accessible" for="registerId">Schlüssel:</label>
-                <input name="registerId" id="registerId" type="text" placeholder="hier den Schlüssel eingeben" size="50" data-theme="a" class="ui-corner-all">
+                <input name="registerId" id="registerId" type="text" placeholder="hier den Schlüssel eingeben" size="25" data-theme="a" class="ui-corner-all">
                 <a class="ui-btn ui-corner-all">Anmelden</a>
             </div>
         </form>
@@ -38,17 +38,14 @@
         </div>
 
         <div data-role="main" class="ui-content">
-            <form>
-                <div data-role="fieldcontain" id="filterContainer">
-                    <label for="filter">Auch gekaufte Produkte anzeigen:</label>
-                    <select name="filter" id="filter" data-role="slider" data-mini="true">
-                        <option value="1">nein</option>
-                        <option value="0">ja</option>
-                    </select>
-                </div>
+            <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
+                <input name="filter" id="showAll" type="radio" checked="checked">
+                <label for="showAll">Alles</label>
+                <input name="filter" id="showSome" type="radio">
+                <label for="showSome">Gekauft</label>
+            </fieldset>
 
-                <fieldset data-role="controlgroup"></fieldset>
-            </form>
+            <fieldset id="products" data-role="controlgroup"></fieldset>
         </div>
 
         <div data-role="footer" data-position="fixed">

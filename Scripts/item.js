@@ -59,16 +59,18 @@ var Item;
             var _this = this;
             this.page = $(List.pageName);
             this.shopping = this.page.find('#goShopping');
-            this.list = this.page.find('[data-role=controlgroup]');
-            this.filter = this.page.find('#filter');
+            this.list = this.page.find('#products');
+            this.filter = this.page.find('#showAll');
             this.sync = this.page.find('#syncItems');
             this.header = this.page.find('[data-role=header] h1');
             this.dialog = $('#register');
             this.userId = this.dialog.find('input');
             this.register = this.dialog.find('a');
+            var someFilter = this.page.find('#showSome');
             this.page.find('#newItem').on('click', function () { return TheApplication.itemScope = null; });
             this.page.on('pagebeforeshow', function () { return _this.onShow(); });
             this.filter.on('change', function () { return _this.loadList(); });
+            someFilter.on('change', function () { return _this.loadList(); });
             this.shopping.on('click', function () { return _this.onBuy(); });
             this.sync.on('click', function () { return _this.synchronize(); });
             this.dialog.popup();
@@ -126,7 +128,7 @@ var Item;
         List.prototype.loadList = function () {
             var _this = this;
             this.list.empty();
-            var all = (this.filter.val() == 1);
+            var all = this.filter.is(':checked');
             $.each(this.items, function (i, item) {
                 if (all || (item.market == null))
                     item.appendTo(_this.list, _this);
@@ -220,7 +222,7 @@ var Item;
         Details.prototype.onShow = function () {
             var item = TheApplication.itemScope;
             if (item == null) {
-                this.header.text('Neues Produkt anlegen');
+                this.header.text('Neues Produkt');
                 this.save.text('Anlegen');
                 this.delete.hide();
                 this.name.val('');
