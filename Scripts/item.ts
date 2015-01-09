@@ -204,7 +204,7 @@ module Item {
             this.sync.on('click', () => this.synchronize());
 
             this.dialog.popup();
-            this.settings.popup({ positionTo: settings.selector });
+            this.settings.enhanceWithin().popup({ positionTo: settings.selector });
             this.register.on('click', () => this.tryRegister());
             settings.on('click', () => this.showSettings());
 
@@ -256,7 +256,7 @@ module Item {
 
         // Zeigt den Anmeldedialog erneut an.
         private reRegister(): void {
-            this.settings.popup({ afterclose: () => this.showRegistration() });
+            this.settings.popup({ afterclose: () => window.setTimeout(() => this.showRegistration(), 10) });
             this.settings.popup('close');
         }
 

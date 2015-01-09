@@ -77,7 +77,7 @@ var Item;
             this.shopping.on('click', function () { return _this.onBuy(); });
             this.sync.on('click', function () { return _this.synchronize(); });
             this.dialog.popup();
-            this.settings.popup({ positionTo: settings.selector });
+            this.settings.enhanceWithin().popup({ positionTo: settings.selector });
             this.register.on('click', function () { return _this.tryRegister(); });
             settings.on('click', function () { return _this.showSettings(); });
             reregister.on('click', function () { return _this.reRegister(); });
@@ -107,7 +107,7 @@ var Item;
         };
         List.prototype.reRegister = function () {
             var _this = this;
-            this.settings.popup({ afterclose: function () { return _this.showRegistration(); } });
+            this.settings.popup({ afterclose: function () { return window.setTimeout(function () { return _this.showRegistration(); }, 10); } });
             this.settings.popup('close');
         };
         List.prototype.showRegistration = function () {
