@@ -172,6 +172,9 @@ module Item {
         // Die Überschrift der Seite
         private header: JQuery;
 
+        // Der Dialog mit den Einstellungen
+        private settings: JQuery;
+
         // Alle Produkte
         items: IItem[];
 
@@ -185,8 +188,11 @@ module Item {
             this.dialog = $('#register');
             this.userId = this.dialog.find('input');
             this.register = this.dialog.find('a');
+            this.settings = $('#settings');
 
             var someFilter = this.page.find('#showSome');
+            var settings = this.page.find('#openSettings');
+            var reregister = this.settings.find('#newRegister');
 
             this.page.find('#newItem').on('click', () => TheApplication.itemScope = null);
             this.page.on('pagebeforeshow', () => this.onShow());
@@ -198,7 +204,11 @@ module Item {
             this.sync.on('click', () => this.synchronize());
 
             this.dialog.popup();
+            this.settings.popup({ positionTo: settings.selector });
             this.register.on('click', () => this.tryRegister());
+            settings.on('click', () => this.showSettings());
+
+            reregister.on('click', () => this.reRegister());
 
             // Die persistierten Produktdaten aus der lokalen Ablage übernehmen
             var storedItems: IStoredItem[] = JSON.parse(localStorage[List.storageKey] || null) || [];
@@ -208,6 +218,12 @@ module Item {
 
             // Die Einstiegsseite erstmalig mit den Produkdaten füllen
             this.onShow();
+        }
+
+        // Zeigt die Einstellungen an.
+        private showSettings(): void {
+            this.settings.popup({ afterclose: null });
+            this.settings.popup('open');
         }
 
         // Führt den einmaligen Anmeldevorgang aus
@@ -238,12 +254,24 @@ module Item {
                 });
         }
 
+        // Zeigt den Anmeldedialog erneut an.
+        private reRegister(): void {
+            this.settings.popup({ afterclose: () => this.showRegistration() });
+            this.settings.popup('close');
+        }
+
+        // Zeigt den Anmeldedialog an.
+        private showRegistration(): void {
+            // Beim ersten Mal muss der Benutzer sich mit seiner eindeutigen Kennung bei der Datenbank anmelden
+            TheApplication.enable(this.register);
+            this.dialog.popup('open');
+        }
+
         // Fordert die Synchronisation mit der Datenbank an.
         private synchronize(): void {
             if (User.getUserId().length < 1) {
                 // Beim ersten Mal muss der Benutzer sich mit seiner eindeutigen Kennung bei der Datenbank anmelden
-                TheApplication.enable(this.register);
-                this.dialog.popup('open');
+                this.showRegistration();
             }
             else {
                 // Ansosten kann man die Synchronisation direkt starten

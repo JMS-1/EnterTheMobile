@@ -66,7 +66,10 @@ var Item;
             this.dialog = $('#register');
             this.userId = this.dialog.find('input');
             this.register = this.dialog.find('a');
+            this.settings = $('#settings');
             var someFilter = this.page.find('#showSome');
+            var settings = this.page.find('#openSettings');
+            var reregister = this.settings.find('#newRegister');
             this.page.find('#newItem').on('click', function () { return TheApplication.itemScope = null; });
             this.page.on('pagebeforeshow', function () { return _this.onShow(); });
             this.filter.on('change', function () { return _this.loadList(); });
@@ -74,11 +77,18 @@ var Item;
             this.shopping.on('click', function () { return _this.onBuy(); });
             this.sync.on('click', function () { return _this.synchronize(); });
             this.dialog.popup();
+            this.settings.popup({ positionTo: settings.selector });
             this.register.on('click', function () { return _this.tryRegister(); });
+            settings.on('click', function () { return _this.showSettings(); });
+            reregister.on('click', function () { return _this.reRegister(); });
             var storedItems = JSON.parse(localStorage[List.storageKey] || null) || [];
             this.items = $.map(storedItems, function (stored) { return new Item(stored); });
             this.onShow();
         }
+        List.prototype.showSettings = function () {
+            this.settings.popup({ afterclose: null });
+            this.settings.popup('open');
+        };
         List.prototype.tryRegister = function () {
             var _this = this;
             TheApplication.disable(this.register);
@@ -95,10 +105,18 @@ var Item;
                 }
             });
         };
+        List.prototype.reRegister = function () {
+            var _this = this;
+            this.settings.popup({ afterclose: function () { return _this.showRegistration(); } });
+            this.settings.popup('close');
+        };
+        List.prototype.showRegistration = function () {
+            TheApplication.enable(this.register);
+            this.dialog.popup('open');
+        };
         List.prototype.synchronize = function () {
             if (User.getUserId().length < 1) {
-                TheApplication.enable(this.register);
-                this.dialog.popup('open');
+                this.showRegistration();
             }
             else {
                 this.onSynchronize();
