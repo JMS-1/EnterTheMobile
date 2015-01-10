@@ -86,6 +86,8 @@ var Item;
             this.onShow();
         }
         List.prototype.showSettings = function () {
+            if (this.userId.val() == '')
+                this.userId.val(User.getUserId());
             this.settings.popup({ afterclose: null });
             this.settings.popup('open');
         };

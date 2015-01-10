@@ -222,6 +222,9 @@ module Item {
 
         // Zeigt die Einstellungen an.
         private showSettings(): void {
+            if (this.userId.val() == '')
+                this.userId.val(User.getUserId());
+                
             this.settings.popup({ afterclose: null });
             this.settings.popup('open');
         }
