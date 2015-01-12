@@ -95,37 +95,17 @@ module Market {
     }
 
     // Das Formular zur Pflege der Daten eines Marktes.
-    export class Details {
+    export class Details extends TheApplication.Detail<List> {
         // Der Name des Formulars im DOM
-        static pageName = '#marketDetail';
-
-        // Die Schaltfläche zur Aktualisierung der Eingaben
-        private save: JQuery;
-
-        // Die Schaltfläche zum Löschen eine Marktes
-        private delete: JQuery;
-
-        // Die Kopfzeile im DOM
-        private header: JQuery;
+        static pageName: string = '#marketDetail';
 
         // Das Eingabeelement für den Namen
         private input: JQuery;
 
-        // Das Formular als Ganzes
-        private form: JQuery;
-
-        constructor(private list: List) {
-            this.form = $(Details.pageName);
-
-            this.form.on('pagebeforeshow', () => this.onShow());
+        constructor(list: List) {
+            super(Details.pageName, '#updateMarket', '#deleteMarket', list);
 
             this.input = this.form.find('#marketText');
-            this.save = this.form.find('#updateMarket');
-            this.delete = this.form.find('#deleteMarket');
-            this.header = this.form.find('[data-role=header] h1');
-
-            this.save.on('click', () => this.onSave());
-            this.delete.on('click', () => this.onDelete());
             this.input.on('change input', () => this.onValidate());
         }
 
@@ -166,7 +146,7 @@ module Market {
         }
 
         // Speichert den Markt.
-        private onSave(): void {
+        protected prepareSave(): void {
             var name = this.getName();
 
             if (TheApplication.marketScope == null)
@@ -175,21 +155,17 @@ module Market {
             else
                 // Ein existierender Markt wird verändert
                 TheApplication.marketScope.name = name;
-
-            // Die lokale Ablage wird immer unmittelbar aktualisiert
-            this.list.save();
         }
 
         // Entfernt den gerade bearbeiteten Markt.
-        private onDelete(): void {
+        protected prepareDelete(): void {
             var index = this.list.markets.indexOf(TheApplication.marketScope);
 
             this.list.markets.splice(index, 1);
-            this.list.save();
         }
 
         // Zeigt das Formular an.
-        private onShow(): void {
+        protected onPreShow(): void {
             if (TheApplication.marketScope == null) {
                 // Ein leeres Formular
                 this.header.text('Neuen Markt anlegen');

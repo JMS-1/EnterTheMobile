@@ -53,18 +53,12 @@ var Market;
         return List;
     })(TheApplication.Master);
     _Market.List = List;
-    var Details = (function () {
+    var Details = (function (_super) {
+        __extends(Details, _super);
         function Details(list) {
             var _this = this;
-            this.list = list;
-            this.form = $(Details.pageName);
-            this.form.on('pagebeforeshow', function () { return _this.onShow(); });
+            _super.call(this, Details.pageName, '#updateMarket', '#deleteMarket', list);
             this.input = this.form.find('#marketText');
-            this.save = this.form.find('#updateMarket');
-            this.delete = this.form.find('#deleteMarket');
-            this.header = this.form.find('[data-role=header] h1');
-            this.save.on('click', function () { return _this.onSave(); });
-            this.delete.on('click', function () { return _this.onDelete(); });
             this.input.on('change input', function () { return _this.onValidate(); });
         }
         Details.prototype.getName = function () {
@@ -89,20 +83,18 @@ var Market;
             else
                 TheApplication.disable(this.save);
         };
-        Details.prototype.onSave = function () {
+        Details.prototype.prepareSave = function () {
             var name = this.getName();
             if (TheApplication.marketScope == null)
                 this.list.markets.push(new Market({ name: name }));
             else
                 TheApplication.marketScope.name = name;
-            this.list.save();
         };
-        Details.prototype.onDelete = function () {
+        Details.prototype.prepareDelete = function () {
             var index = this.list.markets.indexOf(TheApplication.marketScope);
             this.list.markets.splice(index, 1);
-            this.list.save();
         };
-        Details.prototype.onShow = function () {
+        Details.prototype.onPreShow = function () {
             if (TheApplication.marketScope == null) {
                 this.header.text('Neuen Markt anlegen');
                 this.save.text('Anlegen');
@@ -119,7 +111,7 @@ var Market;
         };
         Details.pageName = '#marketDetail';
         return Details;
-    })();
+    })(TheApplication.Detail);
     _Market.Details = Details;
 })(Market || (Market = {}));
 //# sourceMappingURL=market.js.map

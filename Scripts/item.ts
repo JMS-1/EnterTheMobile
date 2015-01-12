@@ -201,14 +201,9 @@ module Item {
 
             reregister.on('click', () => this.reRegister());
 
-            // Die persistierten Produktdaten aus der lokalen Ablage übernehmen
-            var storedItems: IStoredItem[] = JSON.parse(localStorage[List.storageKey] || null) || [];
-
-            // Zu den Rohdaten die benötigten konkreten Objekte erzeugen
-            this.items = $.map(storedItems, stored => new Item(stored));
-
             // Die Einstiegsseite erstmalig mit den Produkdaten füllen
             this.loadList();
+            this.fillList();
         }
 
         // Erstellt einen neuen Eintrag.
@@ -247,7 +242,7 @@ module Item {
                         User.setUserId(userId, userNameInfo.name);
 
                         // Nun können wir die ursprünglich angeforderte Synchronisation mit der Datenbank anfordern
-                        this.loadList();
+                        this.fillList();
                         this.onSynchronize();
                     }
                 });
@@ -297,7 +292,7 @@ module Item {
                     TheApplication.enable(this.sync);
 
                     // Die Produktliste muss entsprechend erneuert werden
-                    this.loadList();
+                    this.fillList();
                 });
         }
 
@@ -328,32 +323,6 @@ module Item {
 
             // Und schließlich die Styles aktualisiert
             this.list.trigger('create');
-        }
-
-        // Überträgt alle Produkt in die lokale Ablage.
-        save(): void {
-            localStorage[List.storageKey] = JSON.stringify(this.items);
-        }
-
-        // Startet oder beendet einen Einkaufsvorgang.
-        private onBuy(): boolean {
-            // Wir gehen den normalen Weg zur Auswahl des Marktes
-            if (TheApplication.activeMarket == null)
-                return true;
-
-            // Es war bereits ein Markt ausgewählt und der Einkaufsvorgang wird beendet
-            TheApplication.activeMarket = null;
-
-            // Die Anzeige müssen wir dementsprechend erneuern
-            this.loadList();
-
-            // Ansonsten bleibt die Anzeige auf der Produktliste stehen
-            return false;
-        }
-
-        // Baut die Anzeige der Produktliste neu auf.
-        protected loadList(): void {
-            this.fillList();
 
             var market = TheApplication.activeMarket;
             if (market == null) {
@@ -375,21 +344,42 @@ module Item {
                 TheApplication.disable(this.sync);
             }
         }
+
+        // Überträgt alle Produkt in die lokale Ablage.
+        save(): void {
+            localStorage[List.storageKey] = JSON.stringify(this.items);
+        }
+
+        // Startet oder beendet einen Einkaufsvorgang.
+        private onBuy(): boolean {
+            // Wir gehen den normalen Weg zur Auswahl des Marktes
+            if (TheApplication.activeMarket == null)
+                return true;
+
+            // Es war bereits ein Markt ausgewählt und der Einkaufsvorgang wird beendet
+            TheApplication.activeMarket = null;
+
+            // Die Anzeige müssen wir dementsprechend erneuern
+            this.fillList();
+
+            // Ansonsten bleibt die Anzeige auf der Produktliste stehen
+            return false;
+        }
+
+        // Baut die Anzeige der Produktliste neu auf.
+        protected loadList(): void {
+            // Die persistierten Produktdaten aus der lokalen Ablage übernehmen
+            var storedItems: IStoredItem[] = JSON.parse(localStorage[List.storageKey] || null) || [];
+
+            // Zu den Rohdaten die benötigten konkreten Objekte erzeugen
+            this.items = $.map(storedItems, stored => new Item(stored));
+        }
     }
 
     // Das Formular zum Ändern der Produktdaten.
-    export class Details {
+    export class Details extends TheApplication.Detail<List> {
         // Der Name des Formulars im DOM
         static pageName = '#itemDetails';
-
-        // Die Schaltfläche zur Übernahme der Eingaben
-        private save: JQuery;
-
-        // Die Schaltfläche zum Löschen des Produkes
-        private delete: JQuery;
-
-        // Das Formular als Ganzes
-        private form: JQuery;
 
         // Das Eingabefeld für den Namen des Produktes
         private name: JQuery;
@@ -397,22 +387,11 @@ module Item {
         // Das Eingabefeld für die Beschreibung des Produktes
         private description: JQuery;
 
-        // Die Überschrift im DOM
-        private header: JQuery;
+        constructor(list: List) {
+            super(Details.pageName, '#updateItem', '#deleteItem', list);
 
-        constructor(private list: List) {
-            this.form = $(Details.pageName);
-
-            this.header = this.form.find('[data-role=header] h1');
             this.description = this.form.find('#itemDescription');
-            this.delete = this.form.find('#deleteItem');
-            this.save = this.form.find('#updateItem');
             this.name = this.form.find('#itemName');
-
-            this.form.on('pagebeforeshow', () => this.onShow());
-
-            this.save.on('click', () => this.onSave());
-            this.delete.on('click', () => this.onDelete());
             this.name.on('change input', () => this.onValidate());
         }
 
@@ -427,7 +406,7 @@ module Item {
         }
 
         // Speicher die Eingaben.
-        private onSave(): void {
+        protected prepareSave(): void {
             var name = this.getName();
             var description = this.getDescription();
             var item = TheApplication.itemScope;
@@ -452,17 +431,12 @@ module Item {
                 if (item.state == ItemState.Unchanged)
                     item.state = ItemState.Modified;
             }
-
-            // Änderungen werden immer sofort in der lokalen Ablage Offline aktualisiert
-            this.list.save();
         }
 
         // Das Produkt wird gelöscht.
-        private onDelete(): void {
+        protected prepareDelete(): void {
             // Dazu müssen wir nur den Zustand anpassen - und die lokale Ablage auf den neuesten Stand bringen
             TheApplication.itemScope.state = ItemState.Deleted;
-
-            this.list.save();
         }
 
         // Ein bisschen Prüfung muss her.
@@ -477,7 +451,7 @@ module Item {
         }
 
         // Bereitet die Anzeige für ein Produkt vor.
-        private onShow(): void {
+        protected onPreShow(): void {
             var item = TheApplication.itemScope;
             if (item == null) {
                 // Ein ganz neues Produkt

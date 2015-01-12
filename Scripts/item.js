@@ -85,9 +85,8 @@ var Item;
             this.register.on('click', function () { return _this.tryRegister(); });
             settings.on('click', function () { return _this.showSettings(); });
             reregister.on('click', function () { return _this.reRegister(); });
-            var storedItems = JSON.parse(localStorage[List.storageKey] || null) || [];
-            this.items = $.map(storedItems, function (stored) { return new Item(stored); });
             this.loadList();
+            this.fillList();
         }
         List.prototype.createNew = function () {
             TheApplication.itemScope = null;
@@ -109,7 +108,7 @@ var Item;
                 }
                 else if (userNameInfo.name.length > 0) {
                     User.setUserId(userId, userNameInfo.name);
-                    _this.loadList();
+                    _this.fillList();
                     _this.onSynchronize();
                 }
             });
@@ -140,7 +139,7 @@ var Item;
                 _this.items = $.map(itemList.items, function (stored) { return new Item(stored); });
                 _this.save();
                 TheApplication.enable(_this.sync);
-                _this.loadList();
+                _this.fillList();
             });
         };
         List.prototype.updateDatabase = function () {
@@ -161,19 +160,6 @@ var Item;
                     item.appendTo(_this.list, _this);
             });
             this.list.trigger('create');
-        };
-        List.prototype.save = function () {
-            localStorage[List.storageKey] = JSON.stringify(this.items);
-        };
-        List.prototype.onBuy = function () {
-            if (TheApplication.activeMarket == null)
-                return true;
-            TheApplication.activeMarket = null;
-            this.loadList();
-            return false;
-        };
-        List.prototype.loadList = function () {
-            this.fillList();
             var market = TheApplication.activeMarket;
             if (market == null) {
                 var userName = User.getUserName();
@@ -187,24 +173,32 @@ var Item;
                 TheApplication.disable(this.sync);
             }
         };
+        List.prototype.save = function () {
+            localStorage[List.storageKey] = JSON.stringify(this.items);
+        };
+        List.prototype.onBuy = function () {
+            if (TheApplication.activeMarket == null)
+                return true;
+            TheApplication.activeMarket = null;
+            this.fillList();
+            return false;
+        };
+        List.prototype.loadList = function () {
+            var storedItems = JSON.parse(localStorage[List.storageKey] || null) || [];
+            this.items = $.map(storedItems, function (stored) { return new Item(stored); });
+        };
         List.storageKey = 'JMSBuy.ItemList';
         List.pageName = '#itemList';
         return List;
     })(TheApplication.Master);
     _Item.List = List;
-    var Details = (function () {
+    var Details = (function (_super) {
+        __extends(Details, _super);
         function Details(list) {
             var _this = this;
-            this.list = list;
-            this.form = $(Details.pageName);
-            this.header = this.form.find('[data-role=header] h1');
+            _super.call(this, Details.pageName, '#updateItem', '#deleteItem', list);
             this.description = this.form.find('#itemDescription');
-            this.delete = this.form.find('#deleteItem');
-            this.save = this.form.find('#updateItem');
             this.name = this.form.find('#itemName');
-            this.form.on('pagebeforeshow', function () { return _this.onShow(); });
-            this.save.on('click', function () { return _this.onSave(); });
-            this.delete.on('click', function () { return _this.onDelete(); });
             this.name.on('change input', function () { return _this.onValidate(); });
         }
         Details.prototype.getName = function () {
@@ -213,7 +207,7 @@ var Item;
         Details.prototype.getDescription = function () {
             return (this.description.val() || '').trim();
         };
-        Details.prototype.onSave = function () {
+        Details.prototype.prepareSave = function () {
             var name = this.getName();
             var description = this.getDescription();
             var item = TheApplication.itemScope;
@@ -233,11 +227,9 @@ var Item;
                 if (item.state == 3 /* Unchanged */)
                     item.state = 2 /* Modified */;
             }
-            this.list.save();
         };
-        Details.prototype.onDelete = function () {
+        Details.prototype.prepareDelete = function () {
             TheApplication.itemScope.state = 1 /* Deleted */;
-            this.list.save();
         };
         Details.prototype.onValidate = function () {
             var name = this.getName();
@@ -246,7 +238,7 @@ var Item;
             else
                 TheApplication.disable(this.save);
         };
-        Details.prototype.onShow = function () {
+        Details.prototype.onPreShow = function () {
             var item = TheApplication.itemScope;
             if (item == null) {
                 this.header.text('Neues Produkt');
@@ -266,7 +258,7 @@ var Item;
         };
         Details.pageName = '#itemDetails';
         return Details;
-    })();
+    })(TheApplication.Detail);
     _Item.Details = Details;
 })(Item || (Item = {}));
 //# sourceMappingURL=item.js.map

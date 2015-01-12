@@ -96,18 +96,18 @@ module TheApplication {
     // Ein Formular zur Pflege eines Listeneintrags.
     export class Detail<TMaster extends Master> {
         // Die Schaltfläche zur Aktualisierung der Eingaben
-        private save: JQuery;
+        protected save: JQuery;
 
         // Die Schaltfläche zum Löschen
-        private delete: JQuery;
+        protected delete: JQuery;
 
         // Die Kopfzeile im DOM
-        private header: JQuery;
+        protected header: JQuery;
 
         // Das Formular als Ganzes
-        private form: JQuery;
+        protected form: JQuery;
 
-        constructor(pageName: string, saveName: string, deleteName: string, private list: TMaster) {
+        constructor(pageName: string, saveName: string, deleteName: string, protected list: TMaster) {
             this.form = $(pageName);
 
             this.form.on('pagebeforeshow', () => this.onPreShow());
