@@ -9,6 +9,10 @@ var TheApplication;
         var itemDetails = new Item.Details(itemList);
         var marketSelectionList = new Market.List();
         var marketDetails = new Market.Details(marketSelectionList);
+        window.applicationCache.addEventListener('updateready', function () {
+            if (window.applicationCache.status == ApplicationCache.UPDATEREADY)
+                window.location.reload();
+        });
     });
     function disable(nodes) {
         nodes.addClass(classDisabled);

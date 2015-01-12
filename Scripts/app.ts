@@ -19,6 +19,12 @@ module TheApplication {
         // Marktverwaltung starten
         var marketSelectionList = new Market.List();
         var marketDetails = new Market.Details(marketSelectionList);
+
+        // Anbindung an die Offline Verwaltung
+        window.applicationCache.addEventListener('updateready', () => {
+            if (window.applicationCache.status == ApplicationCache.UPDATEREADY)
+                window.location.reload();
+        });
     });
 
     // Deaktiviert Eingabelemente, Schaltflächen und Verweise.
