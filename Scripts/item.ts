@@ -138,21 +138,15 @@ module Item {
     }
 
     // Die Liste aller Produkte
-    export class List {
+    export class List extends TheApplication.Master {
         // Der Name der Produktliste in der lokalen Ablage
         private static storageKey = 'JMSBuy.ItemList';
 
-        // Der Name der Produktliste im DOM
+        // Der Name der Seite im DOM.
         static pageName = '#itemList';
 
         // Die Schaltfläche zum Beginnen oder Beenden eines Einkaufs
         private shopping: JQuery;
-
-        // Die Seite mit der Produktliste
-        private page: JQuery;
-
-        // Die Liste der Produkte
-        private list: JQuery;
 
         // Die Einschränkung der Anzeige der Listenelemente
         private filter: JQuery;
@@ -179,9 +173,9 @@ module Item {
         items: IItem[];
 
         constructor() {
-            this.page = $(List.pageName);
+            super(List.pageName, '#products', '#newItem');
+
             this.shopping = this.page.find('#goShopping');
-            this.list = this.page.find('#products');
             this.filter = this.page.find('#showAll');
             this.sync = this.page.find('#syncItems');
             this.header = this.page.find('[data-role=header] h1');
@@ -194,11 +188,8 @@ module Item {
             var settings = this.page.find('#openSettings');
             var reregister = this.settings.find('#newRegister');
 
-            this.page.find('#newItem').on('click', () => TheApplication.itemScope = null);
-            this.page.on('pagebeforeshow', () => this.onShow());
-
-            this.filter.on('change', () => this.loadList());
-            someFilter.on('change', () => this.loadList());
+            this.filter.on('change', () => this.fillList());
+            someFilter.on('change', () => this.fillList());
 
             this.shopping.on('click', () => this.onBuy());
             this.sync.on('click', () => this.synchronize());
@@ -217,7 +208,12 @@ module Item {
             this.items = $.map(storedItems, stored => new Item(stored));
 
             // Die Einstiegsseite erstmalig mit den Produkdaten füllen
-            this.onShow();
+            this.loadList();
+        }
+
+        // Erstellt einen neuen Eintrag.
+        protected createNew(): void {
+            TheApplication.itemScope = null;
         }
 
         // Zeigt die Einstellungen an.
@@ -251,7 +247,7 @@ module Item {
                         User.setUserId(userId, userNameInfo.name);
 
                         // Nun können wir die ursprünglich angeforderte Synchronisation mit der Datenbank anfordern
-                        this.onShow();
+                        this.loadList();
                         this.onSynchronize();
                     }
                 });
@@ -319,7 +315,7 @@ module Item {
         }
 
         // Erneuert die Anzeige der Produktliste.
-        private loadList(): void {
+        protected fillList(): void {
             this.list.empty();
 
             // Filterbedingung auswerten
@@ -330,7 +326,7 @@ module Item {
                     item.appendTo(this.list, this);
             });
 
-            // Styling der Liste erneuern
+            // Und schließlich die Styles aktualisiert
             this.list.trigger('create');
         }
 
@@ -349,16 +345,15 @@ module Item {
             TheApplication.activeMarket = null;
 
             // Die Anzeige müssen wir dementsprechend erneuern
-            this.onShow();
+            this.loadList();
 
             // Ansonsten bleibt die Anzeige auf der Produktliste stehen
             return false;
         }
 
         // Baut die Anzeige der Produktliste neu auf.
-        private onShow(): void {
-            // Die Liste der Produkte wird gefüllt
-            this.loadList();
+        protected loadList(): void {
+            this.fillList();
 
             var market = TheApplication.activeMarket;
             if (market == null) {

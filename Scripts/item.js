@@ -1,3 +1,9 @@
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
 var Item;
 (function (_Item) {
     (function (ItemState) {
@@ -54,12 +60,12 @@ var Item;
         Item.nextCount = 0;
         return Item;
     })();
-    var List = (function () {
+    var List = (function (_super) {
+        __extends(List, _super);
         function List() {
             var _this = this;
-            this.page = $(List.pageName);
+            _super.call(this, List.pageName, '#products', '#newItem');
             this.shopping = this.page.find('#goShopping');
-            this.list = this.page.find('#products');
             this.filter = this.page.find('#showAll');
             this.sync = this.page.find('#syncItems');
             this.header = this.page.find('[data-role=header] h1');
@@ -70,10 +76,8 @@ var Item;
             var someFilter = this.page.find('#showSome');
             var settings = this.page.find('#openSettings');
             var reregister = this.settings.find('#newRegister');
-            this.page.find('#newItem').on('click', function () { return TheApplication.itemScope = null; });
-            this.page.on('pagebeforeshow', function () { return _this.onShow(); });
-            this.filter.on('change', function () { return _this.loadList(); });
-            someFilter.on('change', function () { return _this.loadList(); });
+            this.filter.on('change', function () { return _this.fillList(); });
+            someFilter.on('change', function () { return _this.fillList(); });
             this.shopping.on('click', function () { return _this.onBuy(); });
             this.sync.on('click', function () { return _this.synchronize(); });
             this.dialog.popup();
@@ -83,8 +87,11 @@ var Item;
             reregister.on('click', function () { return _this.reRegister(); });
             var storedItems = JSON.parse(localStorage[List.storageKey] || null) || [];
             this.items = $.map(storedItems, function (stored) { return new Item(stored); });
-            this.onShow();
+            this.loadList();
         }
+        List.prototype.createNew = function () {
+            TheApplication.itemScope = null;
+        };
         List.prototype.showSettings = function () {
             if (this.userId.val() == '')
                 this.userId.val(User.getUserId());
@@ -102,7 +109,7 @@ var Item;
                 }
                 else if (userNameInfo.name.length > 0) {
                     User.setUserId(userId, userNameInfo.name);
-                    _this.onShow();
+                    _this.loadList();
                     _this.onSynchronize();
                 }
             });
@@ -145,7 +152,7 @@ var Item;
                 type: 'POST',
             });
         };
-        List.prototype.loadList = function () {
+        List.prototype.fillList = function () {
             var _this = this;
             this.list.empty();
             var all = this.filter.is(':checked');
@@ -162,11 +169,11 @@ var Item;
             if (TheApplication.activeMarket == null)
                 return true;
             TheApplication.activeMarket = null;
-            this.onShow();
+            this.loadList();
             return false;
         };
-        List.prototype.onShow = function () {
-            this.loadList();
+        List.prototype.loadList = function () {
+            this.fillList();
             var market = TheApplication.activeMarket;
             if (market == null) {
                 var userName = User.getUserName();
@@ -183,7 +190,7 @@ var Item;
         List.storageKey = 'JMSBuy.ItemList';
         List.pageName = '#itemList';
         return List;
-    })();
+    })(TheApplication.Master);
     _Item.List = List;
     var Details = (function () {
         function Details(list) {

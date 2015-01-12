@@ -1,3 +1,9 @@
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
 var Market;
 (function (_Market) {
     var Market = (function () {
@@ -20,14 +26,12 @@ var Market;
         };
         return Market;
     })();
-    var List = (function () {
+    var List = (function (_super) {
+        __extends(List, _super);
         function List() {
-            var _this = this;
-            this.page = $(List.pageName);
-            this.page.on('pagecreate', function () { return _this.onCreated(); });
-            this.page.on('pagebeforeshow', function () { return _this.onShow(); });
+            _super.call(this, '#marketList', '[data-role=listview]', '#newMarket');
         }
-        List.prototype.onShow = function () {
+        List.prototype.fillList = function () {
             var _this = this;
             this.list.empty();
             $.each(this.markets, function (i, market) { return market.appendTo(_this.list); });
@@ -37,17 +41,17 @@ var Market;
             this.markets.sort(Market.compare);
             localStorage[List.storageKey] = JSON.stringify(this.markets);
         };
-        List.prototype.onCreated = function () {
-            this.list = this.page.find('[data-role=listview]');
+        List.prototype.createNew = function () {
+            TheApplication.marketScope = null;
+        };
+        List.prototype.loadList = function () {
             var storedMarkets = JSON.parse(localStorage[List.storageKey] || null) || [];
             this.markets = $.map(storedMarkets, function (stored) { return new Market(stored); });
             this.save();
-            this.page.find('#newMarket').on('click', function () { return TheApplication.marketScope = null; });
         };
         List.storageKey = 'JMSBuy.MarketList';
-        List.pageName = '#marketList';
         return List;
-    })();
+    })(TheApplication.Master);
     _Market.List = List;
     var Details = (function () {
         function Details(list) {

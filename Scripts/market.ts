@@ -47,31 +47,19 @@ module Market {
     }
 
     // Die Auswahlliste der Märkte.
-    export class List {
+    export class List extends TheApplication.Master {
         // Unter diesem Namen wir die Marktliste in der lokalen Ablage gespeichert
         private static storageKey = 'JMSBuy.MarketList';
-
-        // Der Name der Marktliste im DOM
-        private static pageName = '#marketList';
-
-        // Die Liste der Märkte
-        private list: JQuery;
-
-        // Die Seite in der Oberfläche
-        private page: JQuery;
 
         // Alle zurzeit bekannten Märkte
         markets: IMarket[];
 
         constructor() {
-            this.page = $(List.pageName);
-
-            this.page.on('pagecreate', () => this.onCreated());
-            this.page.on('pagebeforeshow', () => this.onShow());
+            super('#marketList', '[data-role=listview]', '#newMarket');
         }
 
         // Aktualisiert die Liste der Märkte
-        private onShow(): void {
+        protected fillList(): void {
             this.list.empty();
 
             // Die Anzeige wird neu aufgebaut
@@ -89,10 +77,12 @@ module Market {
             localStorage[List.storageKey] = JSON.stringify(this.markets);
         }
 
-        // Wird einmalig beim Erzeugen der Seite aufgerufen.
-        private onCreated(): void {
-            this.list = this.page.find('[data-role=listview]');
+        protected createNew(): void {
+            TheApplication.marketScope = null;
+        }
 
+        // Wird einmalig beim Erzeugen der Seite aufgerufen.
+        protected loadList(): void {
             // Lokale Ablage auslesen
             var storedMarkets: IStoredMarket[] = JSON.parse(localStorage[List.storageKey] || null) || [];
 
@@ -101,8 +91,6 @@ module Market {
 
             // Sortieren und zurückspeichern - nur zur Sicherheit
             this.save();
-
-            this.page.find('#newMarket').on('click', () => TheApplication.marketScope = null);
         }
     }
 
