@@ -14,7 +14,7 @@ var Market;
             var _this = this;
             var choose = $('<a/>', { text: this.name, href: Item.List.pageName });
             choose.on('click', function () { return TheApplication.activeMarket = _this; });
-            var edit = $('<a/>', { href: Details.pageName });
+            var edit = $('<a/>', { href: MarketItem.pageName });
             edit.on('click', function () { return TheApplication.marketScope = _this; });
             items.append($('<li/>').append(choose, edit));
         };
@@ -26,51 +26,51 @@ var Market;
         };
         return Market;
     })();
-    var List = (function (_super) {
-        __extends(List, _super);
-        function List() {
+    var MarketList = (function (_super) {
+        __extends(MarketList, _super);
+        function MarketList() {
             _super.call(this, '#marketList', '[data-role=listview]', '#newMarket');
         }
-        List.prototype.fillList = function () {
+        MarketList.prototype.refreshPage = function () {
             var _this = this;
             this.list.empty();
             $.each(this.markets, function (i, market) { return market.appendTo(_this.list); });
             this.list.listview('refresh');
         };
-        List.prototype.save = function () {
+        MarketList.prototype.save = function () {
             this.markets.sort(Market.compare);
-            localStorage[List.storageKey] = JSON.stringify(this.markets);
+            localStorage[MarketList.storageKey] = JSON.stringify(this.markets);
         };
-        List.prototype.createNew = function () {
+        MarketList.prototype.createNew = function () {
             TheApplication.marketScope = null;
         };
-        List.prototype.loadList = function () {
-            var storedMarkets = JSON.parse(localStorage[List.storageKey] || null) || [];
+        MarketList.prototype.loadFromStorage = function () {
+            var storedMarkets = JSON.parse(localStorage[MarketList.storageKey] || null) || [];
             this.markets = $.map(storedMarkets, function (stored) { return new Market(stored); });
             this.save();
         };
-        List.storageKey = 'JMSBuy.MarketList';
-        return List;
+        MarketList.storageKey = 'JMSBuy.MarketList';
+        return MarketList;
     })(TheApplication.Master);
-    _Market.List = List;
-    var Details = (function (_super) {
-        __extends(Details, _super);
-        function Details(list) {
+    _Market.MarketList = MarketList;
+    var MarketItem = (function (_super) {
+        __extends(MarketItem, _super);
+        function MarketItem(list) {
             var _this = this;
-            _super.call(this, Details.pageName, '#updateMarket', '#deleteMarket', list);
+            _super.call(this, MarketItem.pageName, '#updateMarket', '#deleteMarket', list);
             this.input = this.form.find('#marketText');
             this.input.on('change input', function () { return _this.onValidate(); });
         }
-        Details.prototype.getName = function () {
+        MarketItem.prototype.getName = function () {
             return (this.input.val() || '').trim();
         };
-        Details.prototype.onValidate = function () {
+        MarketItem.prototype.onValidate = function () {
             var valid = true;
             var name = this.getName();
             if (name.length < 1)
                 valid = false;
             else
-                $.each(this.list.markets, function (i, market) {
+                $.each(this.master.markets, function (i, market) {
                     if (Market.compareNames(name, market.name) != 0)
                         return true;
                     if (market === TheApplication.marketScope)
@@ -83,18 +83,18 @@ var Market;
             else
                 TheApplication.disable(this.save);
         };
-        Details.prototype.prepareSave = function () {
+        MarketItem.prototype.saveChanges = function () {
             var name = this.getName();
             if (TheApplication.marketScope == null)
-                this.list.markets.push(new Market({ name: name }));
+                this.master.markets.push(new Market({ name: name }));
             else
                 TheApplication.marketScope.name = name;
         };
-        Details.prototype.prepareDelete = function () {
-            var index = this.list.markets.indexOf(TheApplication.marketScope);
-            this.list.markets.splice(index, 1);
+        MarketItem.prototype.deleteItem = function () {
+            var index = this.master.markets.indexOf(TheApplication.marketScope);
+            this.master.markets.splice(index, 1);
         };
-        Details.prototype.onPreShow = function () {
+        MarketItem.prototype.initializeForm = function () {
             if (TheApplication.marketScope == null) {
                 this.header.text('Neuen Markt anlegen');
                 this.save.text('Anlegen');
@@ -109,9 +109,9 @@ var Market;
             }
             this.onValidate();
         };
-        Details.pageName = '#marketDetail';
-        return Details;
+        MarketItem.pageName = '#marketDetail';
+        return MarketItem;
     })(TheApplication.Detail);
-    _Market.Details = Details;
+    _Market.MarketItem = MarketItem;
 })(Market || (Market = {}));
 //# sourceMappingURL=market.js.map

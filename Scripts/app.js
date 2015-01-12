@@ -7,8 +7,8 @@ var TheApplication;
     $(function () {
         var itemList = new Item.List();
         var itemDetails = new Item.Details(itemList);
-        var marketSelectionList = new Market.List();
-        var marketDetails = new Market.Details(marketSelectionList);
+        var marketSelectionList = new Market.MarketList();
+        var marketDetails = new Market.MarketItem(marketSelectionList);
         window.applicationCache.addEventListener('updateready', function () {
             if (window.applicationCache.status == ApplicationCache.UPDATEREADY)
                 window.location.reload();
@@ -35,22 +35,22 @@ var TheApplication;
     }
     TheApplication.formatDateTime = formatDateTime;
     var Master = (function () {
-        function Master(pageName, listSelector, addName) {
+        function Master(pageSelector, listSelector, newSelector) {
             var _this = this;
-            this.page = $(pageName);
+            this.page = $(pageSelector);
             this.list = this.page.find(listSelector);
-            this.page.find(addName).on('click', function () { return _this.createNew(); });
-            this.page.on('pagecreate', function () { return _this.loadList(); });
-            this.page.on('pagebeforeshow', function () { return _this.fillList(); });
+            this.page.find(newSelector).on('click', function () { return _this.createNew(); });
+            this.page.on('pagecreate', function () { return _this.loadFromStorage(); });
+            this.page.on('pagebeforeshow', function () { return _this.refreshPage(); });
         }
-        Master.prototype.fillList = function () {
-            throw 'fillList is abstract';
+        Master.prototype.refreshPage = function () {
+            throw 'refreshPage is abstract';
         };
         Master.prototype.save = function () {
             throw 'save is abstract';
         };
-        Master.prototype.loadList = function () {
-            throw 'save is abstract';
+        Master.prototype.loadFromStorage = function () {
+            throw 'loadFromStorage is abstract';
         };
         Master.prototype.createNew = function () {
             throw 'createNew is abstract';
@@ -59,33 +59,33 @@ var TheApplication;
     })();
     TheApplication.Master = Master;
     var Detail = (function () {
-        function Detail(pageName, saveName, deleteName, list) {
+        function Detail(pageSelector, saveSelector, deleteSelector, master) {
             var _this = this;
-            this.list = list;
-            this.form = $(pageName);
-            this.form.on('pagebeforeshow', function () { return _this.onPreShow(); });
-            this.save = this.form.find(saveName);
-            this.delete = this.form.find(deleteName);
-            this.header = this.form.find('[data-role=header] h1');
+            this.master = master;
+            this.form = $(pageSelector);
+            this.form.on('pagebeforeshow', function () { return _this.initializeForm(); });
+            this.save = this.form.find(saveSelector);
             this.save.on('click', function () { return _this.onSave(); });
+            this.delete = this.form.find(deleteSelector);
             this.delete.on('click', function () { return _this.onDelete(); });
+            this.header = this.form.find('[data-role=header] h1');
         }
-        Detail.prototype.prepareSave = function () {
-            throw 'prepareSave is abstract';
+        Detail.prototype.saveChanges = function () {
+            throw 'saveChanges is abstract';
         };
         Detail.prototype.onSave = function () {
-            this.prepareSave();
-            this.list.save();
+            this.saveChanges();
+            this.master.save();
         };
-        Detail.prototype.prepareDelete = function () {
-            throw 'prepareDelete is abstract';
+        Detail.prototype.deleteItem = function () {
+            throw 'deleteItem is abstract';
         };
         Detail.prototype.onDelete = function () {
-            this.prepareDelete();
-            this.list.save();
+            this.deleteItem();
+            this.master.save();
         };
-        Detail.prototype.onPreShow = function () {
-            throw 'onPreShow is abstract';
+        Detail.prototype.initializeForm = function () {
+            throw 'initializeForm is abstract';
         };
         return Detail;
     })();

@@ -29,7 +29,7 @@ module Market {
             choose.on('click', () => TheApplication.activeMarket = this);
 
             // Die Schaltfläche zur Pflege der Daten
-            var edit = $('<a/>', { href: Details.pageName });
+            var edit = $('<a/>', { href: MarketItem.pageName });
             edit.on('click', () => TheApplication.marketScope = this);
 
             items.append($('<li/>').append(choose, edit));
@@ -47,7 +47,7 @@ module Market {
     }
 
     // Die Auswahlliste der Märkte.
-    export class List extends TheApplication.Master {
+    export class MarketList extends TheApplication.Master {
         // Unter diesem Namen wir die Marktliste in der lokalen Ablage gespeichert
         private static storageKey = 'JMSBuy.MarketList';
 
@@ -59,7 +59,7 @@ module Market {
         }
 
         // Aktualisiert die Liste der Märkte
-        protected fillList(): void {
+        protected refreshPage(): void {
             this.list.empty();
 
             // Die Anzeige wird neu aufgebaut
@@ -74,7 +74,7 @@ module Market {
             // Die Speicherung erfolgt grundsätzlich alphabetisch sortiert
             this.markets.sort(Market.compare);
 
-            localStorage[List.storageKey] = JSON.stringify(this.markets);
+            localStorage[MarketList.storageKey] = JSON.stringify(this.markets);
         }
 
         protected createNew(): void {
@@ -82,9 +82,9 @@ module Market {
         }
 
         // Wird einmalig beim Erzeugen der Seite aufgerufen.
-        protected loadList(): void {
+        protected loadFromStorage(): void {
             // Lokale Ablage auslesen
-            var storedMarkets: IStoredMarket[] = JSON.parse(localStorage[List.storageKey] || null) || [];
+            var storedMarkets: IStoredMarket[] = JSON.parse(localStorage[MarketList.storageKey] || null) || [];
 
             // Rohdaten aus der Ablage in nützliche Objekte wandeln
             this.markets = $.map(storedMarkets, stored => new Market(stored));
@@ -95,15 +95,15 @@ module Market {
     }
 
     // Das Formular zur Pflege der Daten eines Marktes.
-    export class Details extends TheApplication.Detail<List> {
+    export class MarketItem extends TheApplication.Detail<MarketList> {
         // Der Name des Formulars im DOM
         static pageName: string = '#marketDetail';
 
         // Das Eingabeelement für den Namen
         private input: JQuery;
 
-        constructor(list: List) {
-            super(Details.pageName, '#updateMarket', '#deleteMarket', list);
+        constructor(list: MarketList) {
+            super(MarketItem.pageName, '#updateMarket', '#deleteMarket', list);
 
             this.input = this.form.find('#marketText');
             this.input.on('change input', () => this.onValidate());
@@ -124,7 +124,7 @@ module Market {
                 valid = false;
             else
                 // Und muss eindeutig sein
-                $.each(this.list.markets, (i, market) => {
+                $.each(this.master.markets, (i, market) => {
                     // Keine Übereinstimmung
                     if (Market.compareNames(name, market.name) != 0)
                         return true;
@@ -146,26 +146,26 @@ module Market {
         }
 
         // Speichert den Markt.
-        protected prepareSave(): void {
+        protected saveChanges(): void {
             var name = this.getName();
 
             if (TheApplication.marketScope == null)
                 // Ein neuer Markt wird angelegt
-                this.list.markets.push(new Market({ name: name }));
+                this.master.markets.push(new Market({ name: name }));
             else
                 // Ein existierender Markt wird verändert
                 TheApplication.marketScope.name = name;
         }
 
         // Entfernt den gerade bearbeiteten Markt.
-        protected prepareDelete(): void {
-            var index = this.list.markets.indexOf(TheApplication.marketScope);
+        protected deleteItem(): void {
+            var index = this.master.markets.indexOf(TheApplication.marketScope);
 
-            this.list.markets.splice(index, 1);
+            this.master.markets.splice(index, 1);
         }
 
         // Zeigt das Formular an.
-        protected onPreShow(): void {
+        protected initializeForm(): void {
             if (TheApplication.marketScope == null) {
                 // Ein leeres Formular
                 this.header.text('Neuen Markt anlegen');

@@ -17,8 +17,8 @@ module TheApplication {
         var itemDetails = new Item.Details(itemList);
 
         // Marktverwaltung starten
-        var marketSelectionList = new Market.List();
-        var marketDetails = new Market.Details(marketSelectionList);
+        var marketSelectionList = new Market.MarketList();
+        var marketDetails = new Market.MarketItem(marketSelectionList);
 
         // Anbindung an die Offline Verwaltung
         window.applicationCache.addEventListener('updateready', () => {
@@ -62,19 +62,19 @@ module TheApplication {
         // Die Seite in der Oberfläche
         protected page: JQuery;
 
-        constructor(pageName: string, listSelector: string, addName:string) {
-            this.page = $(pageName);
+        constructor(pageSelector: string, listSelector: string, newSelector:string) {
+            this.page = $(pageSelector);
             this.list = this.page.find(listSelector);
 
-            this.page.find(addName).on('click', () => this.createNew());
+            this.page.find(newSelector).on('click', () => this.createNew());
 
-            this.page.on('pagecreate', () => this.loadList());
-            this.page.on('pagebeforeshow', () => this.fillList());
+            this.page.on('pagecreate', () => this.loadFromStorage());
+            this.page.on('pagebeforeshow', () => this.refreshPage());
         }
 
         // Aktualisiert die Anzeige.
-        protected fillList(): void {
-            throw 'fillList is abstract';
+        protected refreshPage(): void {
+            throw 'refreshPage is abstract';
         }
 
         // Aktualisiert die lokale Ablage.
@@ -83,8 +83,8 @@ module TheApplication {
         }
 
         // Liest die lokale Ablage aus.
-        protected loadList(): void {
-            throw 'save is abstract';
+        protected loadFromStorage(): void {
+            throw 'loadFromStorage is abstract';
         }
 
         // Erstellt einen neuen Eintrag.
@@ -107,44 +107,44 @@ module TheApplication {
         // Das Formular als Ganzes
         protected form: JQuery;
 
-        constructor(pageName: string, saveName: string, deleteName: string, protected list: TMaster) {
-            this.form = $(pageName);
+        constructor(pageSelector: string, saveSelector: string, deleteSelector: string, protected master: TMaster) {
+            this.form = $(pageSelector);
+            this.form.on('pagebeforeshow', () => this.initializeForm());
 
-            this.form.on('pagebeforeshow', () => this.onPreShow());
-
-            this.save = this.form.find(saveName);
-            this.delete = this.form.find(deleteName);
-            this.header = this.form.find('[data-role=header] h1');
-
+            this.save = this.form.find(saveSelector);
             this.save.on('click', () => this.onSave());
+
+            this.delete = this.form.find(deleteSelector);
             this.delete.on('click', () => this.onDelete());
+
+            this.header = this.form.find('[data-role=header] h1');
         }
 
         // Methode zur Speicherung.
-        protected prepareSave(): void {
-            throw 'prepareSave is abstract';
+        protected saveChanges(): void {
+            throw 'saveChanges is abstract';
         }
 
         // Speichert den Eintrag.
         private onSave(): void {
-            this.prepareSave();
-            this.list.save();
+            this.saveChanges();
+            this.master.save();
         }
 
         // Methode zum Löschen.
-        protected prepareDelete(): void {
-            throw 'prepareDelete is abstract';
+        protected deleteItem(): void {
+            throw 'deleteItem is abstract';
         }
 
         // Löscht den Eintrag.
         private onDelete(): void {
-            this.prepareDelete();
-            this.list.save();
+            this.deleteItem();
+            this.master.save();
         }
 
         // Zeigt das Formular an.
-        protected onPreShow(): void {
-            throw 'onPreShow is abstract';
+        protected initializeForm(): void {
+            throw 'initializeForm is abstract';
         }
     }
 }

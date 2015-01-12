@@ -65,19 +65,19 @@ var Item;
         function List() {
             var _this = this;
             _super.call(this, List.pageName, '#products', '#newItem');
+            this.settings = $('#settings');
+            this.header = this.page.find('[data-role=header] h1');
             this.shopping = this.page.find('#goShopping');
             this.filter = this.page.find('#showAll');
             this.sync = this.page.find('#syncItems');
-            this.header = this.page.find('[data-role=header] h1');
             this.dialog = $('#register');
             this.userId = this.dialog.find('input');
             this.register = this.dialog.find('a');
-            this.settings = $('#settings');
             var someFilter = this.page.find('#showSome');
             var settings = this.page.find('#openSettings');
             var reregister = this.settings.find('#newRegister');
-            this.filter.on('change', function () { return _this.fillList(); });
-            someFilter.on('change', function () { return _this.fillList(); });
+            this.filter.on('change', function () { return _this.refreshPage(); });
+            someFilter.on('change', function () { return _this.refreshPage(); });
             this.shopping.on('click', function () { return _this.onBuy(); });
             this.sync.on('click', function () { return _this.synchronize(); });
             this.dialog.popup();
@@ -85,8 +85,8 @@ var Item;
             this.register.on('click', function () { return _this.tryRegister(); });
             settings.on('click', function () { return _this.showSettings(); });
             reregister.on('click', function () { return _this.reRegister(); });
-            this.loadList();
-            this.fillList();
+            this.loadFromStorage();
+            this.refreshPage();
         }
         List.prototype.createNew = function () {
             TheApplication.itemScope = null;
@@ -108,7 +108,7 @@ var Item;
                 }
                 else if (userNameInfo.name.length > 0) {
                     User.setUserId(userId, userNameInfo.name);
-                    _this.fillList();
+                    _this.refreshPage();
                     _this.onSynchronize();
                 }
             });
@@ -139,7 +139,7 @@ var Item;
                 _this.items = $.map(itemList.items, function (stored) { return new Item(stored); });
                 _this.save();
                 TheApplication.enable(_this.sync);
-                _this.fillList();
+                _this.refreshPage();
             });
         };
         List.prototype.updateDatabase = function () {
@@ -151,7 +151,7 @@ var Item;
                 type: 'POST',
             });
         };
-        List.prototype.fillList = function () {
+        List.prototype.refreshPage = function () {
             var _this = this;
             this.list.empty();
             var all = this.filter.is(':checked');
@@ -180,10 +180,10 @@ var Item;
             if (TheApplication.activeMarket == null)
                 return true;
             TheApplication.activeMarket = null;
-            this.fillList();
+            this.refreshPage();
             return false;
         };
-        List.prototype.loadList = function () {
+        List.prototype.loadFromStorage = function () {
             var storedItems = JSON.parse(localStorage[List.storageKey] || null) || [];
             this.items = $.map(storedItems, function (stored) { return new Item(stored); });
         };
@@ -207,12 +207,12 @@ var Item;
         Details.prototype.getDescription = function () {
             return (this.description.val() || '').trim();
         };
-        Details.prototype.prepareSave = function () {
+        Details.prototype.saveChanges = function () {
             var name = this.getName();
             var description = this.getDescription();
             var item = TheApplication.itemScope;
             if (item == null)
-                this.list.items.push(new Item({
+                this.master.items.push(new Item({
                     state: 0 /* NewlyCreated */,
                     created: new Date($.now()),
                     description: description,
@@ -228,7 +228,7 @@ var Item;
                     item.state = 2 /* Modified */;
             }
         };
-        Details.prototype.prepareDelete = function () {
+        Details.prototype.deleteItem = function () {
             TheApplication.itemScope.state = 1 /* Deleted */;
         };
         Details.prototype.onValidate = function () {
@@ -238,7 +238,7 @@ var Item;
             else
                 TheApplication.disable(this.save);
         };
-        Details.prototype.onPreShow = function () {
+        Details.prototype.initializeForm = function () {
             var item = TheApplication.itemScope;
             if (item == null) {
                 this.header.text('Neues Produkt');

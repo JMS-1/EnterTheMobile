@@ -175,21 +175,23 @@ module Item {
         constructor() {
             super(List.pageName, '#products', '#newItem');
 
+            this.settings = $('#settings');
+
+            this.header = this.page.find('[data-role=header] h1');
             this.shopping = this.page.find('#goShopping');
             this.filter = this.page.find('#showAll');
             this.sync = this.page.find('#syncItems');
-            this.header = this.page.find('[data-role=header] h1');
+
             this.dialog = $('#register');
             this.userId = this.dialog.find('input');
             this.register = this.dialog.find('a');
-            this.settings = $('#settings');
-
+            
             var someFilter = this.page.find('#showSome');
             var settings = this.page.find('#openSettings');
             var reregister = this.settings.find('#newRegister');
 
-            this.filter.on('change', () => this.fillList());
-            someFilter.on('change', () => this.fillList());
+            this.filter.on('change', () => this.refreshPage());
+            someFilter.on('change', () => this.refreshPage());
 
             this.shopping.on('click', () => this.onBuy());
             this.sync.on('click', () => this.synchronize());
@@ -202,8 +204,8 @@ module Item {
             reregister.on('click', () => this.reRegister());
 
             // Die Einstiegsseite erstmalig mit den Produkdaten füllen
-            this.loadList();
-            this.fillList();
+            this.loadFromStorage();
+            this.refreshPage();
         }
 
         // Erstellt einen neuen Eintrag.
@@ -242,7 +244,7 @@ module Item {
                         User.setUserId(userId, userNameInfo.name);
 
                         // Nun können wir die ursprünglich angeforderte Synchronisation mit der Datenbank anfordern
-                        this.fillList();
+                        this.refreshPage();
                         this.onSynchronize();
                     }
                 });
@@ -292,7 +294,7 @@ module Item {
                     TheApplication.enable(this.sync);
 
                     // Die Produktliste muss entsprechend erneuert werden
-                    this.fillList();
+                    this.refreshPage();
                 });
         }
 
@@ -310,7 +312,7 @@ module Item {
         }
 
         // Erneuert die Anzeige der Produktliste.
-        protected fillList(): void {
+        protected refreshPage(): void {
             this.list.empty();
 
             // Filterbedingung auswerten
@@ -360,14 +362,14 @@ module Item {
             TheApplication.activeMarket = null;
 
             // Die Anzeige müssen wir dementsprechend erneuern
-            this.fillList();
+            this.refreshPage();
 
             // Ansonsten bleibt die Anzeige auf der Produktliste stehen
             return false;
         }
 
         // Baut die Anzeige der Produktliste neu auf.
-        protected loadList(): void {
+        protected loadFromStorage(): void {
             // Die persistierten Produktdaten aus der lokalen Ablage übernehmen
             var storedItems: IStoredItem[] = JSON.parse(localStorage[List.storageKey] || null) || [];
 
@@ -391,6 +393,7 @@ module Item {
             super(Details.pageName, '#updateItem', '#deleteItem', list);
 
             this.description = this.form.find('#itemDescription');
+
             this.name = this.form.find('#itemName');
             this.name.on('change input', () => this.onValidate());
         }
@@ -406,14 +409,14 @@ module Item {
         }
 
         // Speicher die Eingaben.
-        protected prepareSave(): void {
+        protected saveChanges(): void {
             var name = this.getName();
             var description = this.getDescription();
             var item = TheApplication.itemScope;
 
             if (item == null)
                 // Ein neues Produkt muss angelegt werden
-                this.list.items.push(
+                this.master.items.push(
                     new Item({
                         state: ItemState.NewlyCreated,
                         created: new Date($.now()),
@@ -434,7 +437,7 @@ module Item {
         }
 
         // Das Produkt wird gelöscht.
-        protected prepareDelete(): void {
+        protected deleteItem(): void {
             // Dazu müssen wir nur den Zustand anpassen - und die lokale Ablage auf den neuesten Stand bringen
             TheApplication.itemScope.state = ItemState.Deleted;
         }
@@ -451,7 +454,7 @@ module Item {
         }
 
         // Bereitet die Anzeige für ein Produkt vor.
-        protected onPreShow(): void {
+        protected initializeForm(): void {
             var item = TheApplication.itemScope;
             if (item == null) {
                 // Ein ganz neues Produkt
