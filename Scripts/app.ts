@@ -62,7 +62,7 @@ module TheApplication {
         // Die Seite in der Oberfläche
         protected page: JQuery;
 
-        constructor(pageSelector: string, listSelector: string, newSelector:string) {
+        constructor(pageSelector: string, listSelector: string, newSelector: string) {
             this.page = $(pageSelector);
             this.list = this.page.find(listSelector);
 
