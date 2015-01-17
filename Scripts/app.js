@@ -5,6 +5,7 @@ var TheApplication;
     TheApplication.marketScope = null;
     TheApplication.itemScope = null;
     $(function () {
+        $.mobile.hashListeningEnabled = false;
         var itemList = new Item.List();
         var itemDetails = new Item.Details(itemList);
         var marketSelectionList = new Market.MarketList();

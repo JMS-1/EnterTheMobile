@@ -41,7 +41,7 @@ var Item;
         Item.prototype.onClick = function (ev, list, checker) {
             if (TheApplication.activeMarket == null) {
                 TheApplication.itemScope = this;
-                $.mobile.changePage(Details.pageName, { transition: 'none' });
+                $.mobile.pageContainer.pagecontainer("change", Details.pageName, { transition: 'none' });
             }
             else {
                 if (checker.is(':checked')) {

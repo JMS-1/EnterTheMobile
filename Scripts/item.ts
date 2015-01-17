@@ -109,7 +109,7 @@ module Item {
                 // Sind wir gerade nicht beim Einkaufen, so können die Produktdaten verändert werden
                 TheApplication.itemScope = this;
 
-                $.mobile.changePage(Details.pageName, { transition: 'none' });
+                $.mobile.pageContainer.pagecontainer("change", Details.pageName, { transition: 'none' });
             }
             else {
                 // Während des Einkaufens wird die Marktzuordnung einfach verändert
@@ -185,7 +185,7 @@ module Item {
             this.dialog = $('#register');
             this.userId = this.dialog.find('input');
             this.register = this.dialog.find('a');
-            
+
             var someFilter = this.page.find('#showSome');
             var settings = this.page.find('#openSettings');
             var reregister = this.settings.find('#newRegister');
@@ -217,7 +217,7 @@ module Item {
         private showSettings(): void {
             if (this.userId.val() == '')
                 this.userId.val(User.getUserId());
-                
+
             this.settings.popup({ afterclose: null });
             this.settings.popup('open');
         }

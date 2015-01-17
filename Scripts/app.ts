@@ -12,6 +12,8 @@ module TheApplication {
     export var itemScope: Item.IItem = null; // Das Produkt, das im Detailformular angezeigt wird
 
     $(() => {
+        $.mobile.hashListeningEnabled = false;
+
         // Produktverwaltung starten
         var itemList = new Item.List();
         var itemDetails = new Item.Details(itemList);
@@ -60,7 +62,7 @@ module TheApplication {
         protected list: JQuery;
 
         // Die Seite in der Oberfläche
-        protected page: JQuery;
+        page: JQuery;
 
         constructor(pageSelector: string, listSelector: string, newSelector: string) {
             this.page = $(pageSelector);
