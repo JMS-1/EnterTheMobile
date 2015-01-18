@@ -94,11 +94,15 @@ module Item {
             // Das Auswahlfeld
             var seq = 'itm' + (++Item.nextCount);
             var checker = $('<input/>', { type: 'checkbox', name: seq, id: seq });
-            checker.prop('checked', this.market != null);
+            checker.prop('checked', this.bought != null);
             checker.on('change', ev => this.onClick(ev, list, checker));
 
             // Die Daten zum Produkt, so wie sie zur Auswahl angeboten werden
-            var label = $('<label/>', { text: this.name, title: this.description, 'for': seq });
+            var name = this.name;
+            if ((this.market || '') != '')
+                name = this.market + ': ' + name;
+                
+            var label = $('<label/>', { text: name, title: this.description, 'for': seq });
 
             items.append(checker, label);
         }
@@ -319,7 +323,7 @@ module Item {
             var all = this.filter.is(':checked');
 
             $.each(this.items, (i, item) => {
-                if (all || (item.market == null))
+                if (all || (item.bought == null))
                     item.appendTo(this.list, this);
             });
 
@@ -389,10 +393,14 @@ module Item {
         // Das Eingabefeld für die Beschreibung des Produktes
         private description: JQuery;
 
+        // Die Auswahlliste für den Markt
+        private market: JQuery;
+
         constructor(list: List) {
             super(Details.pageName, '#updateItem', '#deleteItem', list);
 
             this.description = this.form.find('#itemDescription');
+            this.market = this.form.find('#itemMarket');
 
             this.name = this.form.find('#itemName');
             this.name.on('change input', () => this.onValidate());
@@ -408,9 +416,15 @@ module Item {
             return (this.description.val() || '').trim();
         }
 
+        // Meldet den aktuell ausgewählten Markt.
+        private getMarket(): string {
+            return this.market.val();
+        }
+
         // Speicher die Eingaben.
         protected saveChanges(): void {
             var name = this.getName();
+            var market = this.getMarket();
             var description = this.getDescription();
             var item = TheApplication.itemScope;
 
@@ -421,14 +435,15 @@ module Item {
                         state: ItemState.NewlyCreated,
                         created: new Date($.now()),
                         description: description,
+                        market: market,
                         bought: null,
-                        market: null,
                         name: name,
                         id: null,
                     }));
             else {
                 // Ein Produkt wird verändert - dabei dürfen wir den Zustand nicht vergessen
                 item.name = name;
+                item.market = market;
                 item.description = description;
 
                 if (item.state == ItemState.Unchanged)
@@ -474,6 +489,27 @@ module Item {
                 this.name.val(item.name);
                 this.description.val(item.description);
             }
+
+            // Markt vorbereiten
+            this.market.empty();
+
+            var anyOption = $('<option />', { value: '', text: '(egal)' });
+            var selectedOption = anyOption;
+
+            this.market.append($('<option />'), anyOption);
+
+            $.each(TheApplication.getMarkets(), (index, market) => {
+                var marketOption = $('<option />', { text: market.name });
+                if (item != null)
+                    if (market.name == item.market)
+                        selectedOption = marketOption;
+
+                this.market.append(marketOption);
+            });
+
+            selectedOption.attr('selected', 'selected');
+
+            this.market.selectmenu('refresh');
 
             // Immer einmal prüfen
             this.onValidate();

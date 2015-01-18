@@ -35,8 +35,8 @@
 	$id = null;
 
 	// Die einzelnen Befehle zum Anlegen, Löschen, Ändern und Auslesen werden vorbereitet
-	$insert = $con->prepare('INSERT INTO buyList (userid, item, description, added) VALUES(?, ?, ?, FROM_UNIXTIME(?))');
-	$insert->bind_param('sssi', $userid, $name, $description, $created);
+	$insert = $con->prepare('INSERT INTO buyList (userid, item, description, added, bought, `where`) VALUES(?, ?, ?, FROM_UNIXTIME(?), FROM_UNIXTIME(?), ?)');
+	$insert->bind_param('sssiis', $userid, $name, $description, $created, $bought, $market);
 
 	$delete = $con->prepare('DELETE FROM buyList WHERE userid = ? AND id = ?');
 	$delete->bind_param('si', $userid, $id);
@@ -44,9 +44,9 @@
 	$update = $con->prepare('UPDATE buyList SET item = ?, description = ?, bought = FROM_UNIXTIME(?), `where` = ? WHERE userid = ? AND id = ?');
 	$update->bind_param('ssissi', $name, $description, $bought, $market, $userid, $id);
 	
-	$query = $con->prepare('SELECT id, item, description, UNIX_TIMESTAMP(added) FROM buyList WHERE userid = ? AND (bought IS NULL OR `where` IS NULL) ORDER BY id');
+	$query = $con->prepare('SELECT id, item, description, UNIX_TIMESTAMP(added), `where` FROM buyList WHERE userid = ? AND (bought IS NULL OR `where` IS NULL) ORDER BY id');
 	$query->bind_param('s', $userid);
-	$query->bind_result($id, $name, $description, $created);
+	$query->bind_result($id, $name, $description, $created, $market);
 
 	// Alle Offline veränderten Produkte werden untersucht
 	foreach($items as $item){
@@ -58,6 +58,10 @@
 		$state = $item['state'];
 		$name = $item['name'];
 		$id = $item['id'];
+
+		// Ein JSON Datum wird hier in der internen Zahldarstellung verwendet, ist aber optional
+		if($bought != null)
+			$bought = strtotime($bought);
 
 		// Abhängig vom Zustand ausführen
 		switch ($state){
@@ -72,10 +76,6 @@
 			}
 
 			case ItemState::Modified:{
-				// Ein JSON Datum wird hier in der internen Zahldarstellung verwendet
-				if($bought != null)
-					$bought = strtotime($bought);
-
 				$update->execute();
 				break;
 			}
@@ -105,8 +105,8 @@
 		$result['created'] = date('c', $created);
 		$result['state'] = ItemState::Unchanged;
 		$result['description'] = $description;
+		$result['market'] = $market;
 		$result['bought'] = null;
-		$result['market'] = null;
 		$result['name'] = $name;
 		$result['id'] = $id;
 

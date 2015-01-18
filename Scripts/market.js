@@ -26,33 +26,34 @@ var Market;
         };
         return Market;
     })();
-    var MarketList = (function (_super) {
-        __extends(MarketList, _super);
-        function MarketList() {
+    var List = (function (_super) {
+        __extends(List, _super);
+        function List() {
             _super.call(this, '#marketList', '[data-role=listview]', '#newMarket');
+            this.loadFromStorage();
         }
-        MarketList.prototype.refreshPage = function () {
+        List.prototype.refreshPage = function () {
             var _this = this;
             this.list.empty();
             $.each(this.markets, function (i, market) { return market.appendTo(_this.list); });
             this.list.listview('refresh');
         };
-        MarketList.prototype.save = function () {
+        List.prototype.save = function () {
             this.markets.sort(Market.compare);
-            localStorage[MarketList.storageKey] = JSON.stringify(this.markets);
+            localStorage[List.storageKey] = JSON.stringify(this.markets);
         };
-        MarketList.prototype.createNew = function () {
+        List.prototype.createNew = function () {
             TheApplication.marketScope = null;
         };
-        MarketList.prototype.loadFromStorage = function () {
-            var storedMarkets = JSON.parse(localStorage[MarketList.storageKey] || null) || [];
+        List.prototype.loadFromStorage = function () {
+            var storedMarkets = JSON.parse(localStorage[List.storageKey] || null) || [];
             this.markets = $.map(storedMarkets, function (stored) { return new Market(stored); });
             this.save();
         };
-        MarketList.storageKey = 'JMSBuy.MarketList';
-        return MarketList;
+        List.storageKey = 'JMSBuy.MarketList';
+        return List;
     })(TheApplication.Master);
-    _Market.MarketList = MarketList;
+    _Market.List = List;
     var MarketItem = (function (_super) {
         __extends(MarketItem, _super);
         function MarketItem(list) {

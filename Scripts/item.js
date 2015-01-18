@@ -33,9 +33,12 @@ var Item;
                 return;
             var seq = 'itm' + (++Item.nextCount);
             var checker = $('<input/>', { type: 'checkbox', name: seq, id: seq });
-            checker.prop('checked', this.market != null);
+            checker.prop('checked', this.bought != null);
             checker.on('change', function (ev) { return _this.onClick(ev, list, checker); });
-            var label = $('<label/>', { text: this.name, title: this.description, 'for': seq });
+            var name = this.name;
+            if ((this.market || '') != '')
+                name = this.market + ': ' + name;
+            var label = $('<label/>', { text: name, title: this.description, 'for': seq });
             items.append(checker, label);
         };
         Item.prototype.onClick = function (ev, list, checker) {
@@ -156,7 +159,7 @@ var Item;
             this.list.empty();
             var all = this.filter.is(':checked');
             $.each(this.items, function (i, item) {
-                if (all || (item.market == null))
+                if (all || (item.bought == null))
                     item.appendTo(_this.list, _this);
             });
             this.list.trigger('create');
@@ -198,6 +201,7 @@ var Item;
             var _this = this;
             _super.call(this, Details.pageName, '#updateItem', '#deleteItem', list);
             this.description = this.form.find('#itemDescription');
+            this.market = this.form.find('#itemMarket');
             this.name = this.form.find('#itemName');
             this.name.on('change input', function () { return _this.onValidate(); });
         }
@@ -207,8 +211,12 @@ var Item;
         Details.prototype.getDescription = function () {
             return (this.description.val() || '').trim();
         };
+        Details.prototype.getMarket = function () {
+            return this.market.val();
+        };
         Details.prototype.saveChanges = function () {
             var name = this.getName();
+            var market = this.getMarket();
             var description = this.getDescription();
             var item = TheApplication.itemScope;
             if (item == null)
@@ -216,13 +224,14 @@ var Item;
                     state: 0 /* NewlyCreated */,
                     created: new Date($.now()),
                     description: description,
+                    market: market,
                     bought: null,
-                    market: null,
                     name: name,
                     id: null,
                 }));
             else {
                 item.name = name;
+                item.market = market;
                 item.description = description;
                 if (item.state == 3 /* Unchanged */)
                     item.state = 2 /* Modified */;
@@ -239,6 +248,7 @@ var Item;
                 TheApplication.disable(this.save);
         };
         Details.prototype.initializeForm = function () {
+            var _this = this;
             var item = TheApplication.itemScope;
             if (item == null) {
                 this.header.text('Neues Produkt');
@@ -254,6 +264,19 @@ var Item;
                 this.name.val(item.name);
                 this.description.val(item.description);
             }
+            this.market.empty();
+            var anyOption = $('<option />', { value: '', text: '(egal)' });
+            var selectedOption = anyOption;
+            this.market.append($('<option />'), anyOption);
+            $.each(TheApplication.getMarkets(), function (index, market) {
+                var marketOption = $('<option />', { text: market.name });
+                if (item != null)
+                    if (market.name == item.market)
+                        selectedOption = marketOption;
+                _this.market.append(marketOption);
+            });
+            selectedOption.attr('selected', 'selected');
+            this.market.selectmenu('refresh');
             this.onValidate();
         };
         Details.pageName = '#itemDetails';

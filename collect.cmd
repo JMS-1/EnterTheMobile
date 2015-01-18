@@ -19,5 +19,3 @@ xcopy /y Scripts\user.js publish\scripts
 xcopy /y Scripts\item.js publish\scripts
 xcopy /y Scripts\market.js publish\scripts
 xcopy /y Scripts\app.js publish\scripts
-
-pause

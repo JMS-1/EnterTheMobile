@@ -47,7 +47,7 @@ module Market {
     }
 
     // Die Auswahlliste der Märkte.
-    export class MarketList extends TheApplication.Master {
+    export class List extends TheApplication.Master {
         // Unter diesem Namen wir die Marktliste in der lokalen Ablage gespeichert
         private static storageKey = 'JMSBuy.MarketList';
 
@@ -56,6 +56,9 @@ module Market {
 
         constructor() {
             super('#marketList', '[data-role=listview]', '#newMarket');
+
+            // Einmalig vorab laden
+            this.loadFromStorage();
         }
 
         // Aktualisiert die Liste der Märkte
@@ -74,7 +77,7 @@ module Market {
             // Die Speicherung erfolgt grundsätzlich alphabetisch sortiert
             this.markets.sort(Market.compare);
 
-            localStorage[MarketList.storageKey] = JSON.stringify(this.markets);
+            localStorage[List.storageKey] = JSON.stringify(this.markets);
         }
 
         protected createNew(): void {
@@ -84,7 +87,7 @@ module Market {
         // Wird einmalig beim Erzeugen der Seite aufgerufen.
         protected loadFromStorage(): void {
             // Lokale Ablage auslesen
-            var storedMarkets: IStoredMarket[] = JSON.parse(localStorage[MarketList.storageKey] || null) || [];
+            var storedMarkets: IStoredMarket[] = JSON.parse(localStorage[List.storageKey] || null) || [];
 
             // Rohdaten aus der Ablage in nützliche Objekte wandeln
             this.markets = $.map(storedMarkets, stored => new Market(stored));
@@ -95,14 +98,14 @@ module Market {
     }
 
     // Das Formular zur Pflege der Daten eines Marktes.
-    export class MarketItem extends TheApplication.Detail<MarketList> {
+    export class MarketItem extends TheApplication.Detail<List> {
         // Der Name des Formulars im DOM
         static pageName: string = '#marketDetail';
 
         // Das Eingabeelement für den Namen
         private input: JQuery;
 
-        constructor(list: MarketList) {
+        constructor(list: List) {
             super(MarketItem.pageName, '#updateMarket', '#deleteMarket', list);
 
             this.input = this.form.find('#marketText');

@@ -4,17 +4,23 @@ var TheApplication;
     TheApplication.activeMarket = null;
     TheApplication.marketScope = null;
     TheApplication.itemScope = null;
+    var marketReader;
     $(function () {
         $.mobile.hashListeningEnabled = false;
         var itemList = new Item.List();
         var itemDetails = new Item.Details(itemList);
-        var marketSelectionList = new Market.MarketList();
+        var marketSelectionList = new Market.List();
         var marketDetails = new Market.MarketItem(marketSelectionList);
+        marketReader = function () { return marketSelectionList.markets; };
         window.applicationCache.addEventListener('updateready', function () {
             if (window.applicationCache.status == ApplicationCache.UPDATEREADY)
                 window.location.reload();
         });
     });
+    function getMarkets() {
+        return marketReader();
+    }
+    TheApplication.getMarkets = getMarkets;
     function disable(nodes) {
         nodes.addClass(classDisabled);
     }
