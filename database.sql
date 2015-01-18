@@ -19,3 +19,10 @@ CREATE TABLE `buyList` (
   CONSTRAINT `buyList_ibfk_1` FOREIGN KEY (`userid`) REFERENCES `buyUsers` (`userid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_german2_ci;
 
+CREATE TABLE `buyMarkets` (
+  `userid` char(32) COLLATE latin1_german2_ci NOT NULL,
+  `name` varchar(40) COLLATE latin1_german2_ci NOT NULL,
+  KEY `userid` (`userid`),
+  UNIQUE KEY `name` (`userid`,`name`),
+  CONSTRAINT `buyMarkets_ibfk_1` FOREIGN KEY (`userid`) REFERENCES `buyUsers` (`userid`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_german2_ci;
