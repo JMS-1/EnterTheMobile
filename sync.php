@@ -27,6 +27,7 @@
 
 	// Alle Variablen, die wir in Bindungen verwenden, werden vorab definiert - das macht ein paar Abläufe einfacher
 	$description = null;
+	$priority = null;
 	$created = null;
 	$bought = null;
 	$market = null;
@@ -35,24 +36,25 @@
 	$id = null;
 
 	// Die einzelnen Befehle zum Anlegen, Löschen, Ändern und Auslesen werden vorbereitet
-	$insert = $con->prepare('INSERT INTO buyList (userid, item, description, added, bought, `where`) VALUES(?, ?, ?, FROM_UNIXTIME(?), FROM_UNIXTIME(?), ?)');
-	$insert->bind_param('sssiis', $userid, $name, $description, $created, $bought, $market);
+	$insert = $con->prepare('INSERT INTO buyList (userid, item, description, added, bought, `where`, `priority`) VALUES(?, ?, ?, FROM_UNIXTIME(?), FROM_UNIXTIME(?), ?, ?)');
+	$insert->bind_param('sssiisi', $userid, $name, $description, $created, $bought, $market, $priority);
 
 	$delete = $con->prepare('DELETE FROM buyList WHERE userid = ? AND id = ?');
 	$delete->bind_param('si', $userid, $id);
 	
-	$update = $con->prepare('UPDATE buyList SET item = ?, description = ?, bought = FROM_UNIXTIME(?), `where` = ? WHERE userid = ? AND id = ?');
-	$update->bind_param('ssissi', $name, $description, $bought, $market, $userid, $id);
+	$update = $con->prepare('UPDATE buyList SET item = ?, description = ?, bought = FROM_UNIXTIME(?), `where` = ?, `priority` = ? WHERE userid = ? AND id = ?');
+	$update->bind_param('ssisisi', $name, $description, $bought, $market, $priority, $userid, $id);
 	
-	$query = $con->prepare('SELECT id, item, description, UNIX_TIMESTAMP(added), `where` FROM buyList WHERE userid = ? AND (bought IS NULL OR `where` IS NULL) ORDER BY id');
+	$query = $con->prepare('SELECT id, item, description, UNIX_TIMESTAMP(added), `where`, `priority` FROM buyList WHERE userid = ? AND (bought IS NULL OR `where` IS NULL) ORDER BY `priority`, id');
 	$query->bind_param('s', $userid);
-	$query->bind_result($id, $name, $description, $created, $market);
+	$query->bind_result($id, $name, $description, $created, $market, $priority);
 
 	// Alle Offline veränderten Produkte werden untersucht
 	foreach($items as $item){
 		// Wir füllen alle potentiell verwendeten Bindingsvariablen - das macht den Programmcode etwas einfacher
 		$created = strtotime($item['created']);
 		$description = $item['description'];
+		$priority = $item['priority'];
 		$bought = $item['bought'];
 		$market = $item['market'];
 		$state = $item['state'];
@@ -105,6 +107,7 @@
 		$result['created'] = date('c', $created);
 		$result['state'] = ItemState::Unchanged;
 		$result['description'] = $description;
+		$result['priority'] = $priority;
 		$result['market'] = $market;
 		$result['bought'] = null;
 		$result['name'] = $name;

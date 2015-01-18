@@ -13,6 +13,7 @@ CREATE TABLE `buyList` (
   `added` timestamp NOT NULL,
   `bought` timestamp NULL DEFAULT NULL,
   `where` varchar(40) COLLATE latin1_german2_ci DEFAULT NULL,
+  `priority` int(11) NOT NULL,  
   PRIMARY KEY (`id`),
   KEY `userid` (`userid`),
   CONSTRAINT `buyList_ibfk_1` FOREIGN KEY (`userid`) REFERENCES `buyUsers` (`userid`) ON DELETE CASCADE

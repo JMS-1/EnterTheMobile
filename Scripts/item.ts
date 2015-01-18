@@ -42,6 +42,9 @@ module Item {
 
         // Der Markt, in dem das Produkt erworben wurde.
         market: string;
+
+        // Die Ordnung es Produktes.
+        priority: number;
     }
 
     // Die Objektsicht auf ein Produkt.
@@ -55,7 +58,6 @@ module Item {
         // Hilfszähler zur eindeutigen Vergabe von Elementnamen im DOM.
         private static nextCount = 0;
 
-        // Der eindeutige Elementname im DOM.
         id: number;
 
         state: ItemState;
@@ -70,6 +72,8 @@ module Item {
 
         market: string;
 
+        priority: number;
+
         constructor(stored: IStoredItem) {
             this.id = stored.id;
             this.name = stored.name;
@@ -77,7 +81,12 @@ module Item {
             this.bought = stored.bought;
             this.market = stored.market;
             this.created = stored.created;
+            this.priority = stored.priority || 0;
             this.description = stored.description;
+
+            if (stored.priority === undefined)
+                if (this.state == ItemState.Unchanged)
+                    this.state = ItemState.Modified;
 
             // Datumswerte werden bei der Persistierung in ISO Zeichenketten gewandelt, intern arbeiten wir aber mit echten Datumsobjekten.
             if (typeof (this.created) == 'string')
@@ -243,8 +252,15 @@ module Item {
             if (newIndex >= this.items.length)
                 return;
 
+            // Markieren
+            var nextItem = this.items[newIndex];
+            if (nextItem.state == ItemState.Unchanged)
+                nextItem.state = ItemState.Modified;
+            if (item.state == ItemState.Unchanged)
+                item.state = ItemState.Modified;
+
             // Austauschen
-            this.items[index] = this.items[newIndex];
+            this.items[index] = nextItem;
             this.items[newIndex] = item;
 
             // Speichern
@@ -332,6 +348,9 @@ module Item {
 
         // Führt den Aufruf an die Datenbank aus.
         private updateDatabase(): JQueryPromise<ISynchronized> {
+            // Aktuelle Ordnung fixieren
+            $.each(this.items, (index, item) => item.priority = index);
+
             // Es werden nur unveränderte oder neue Produkte übertragen - das reduziert die Datenmenge eventuell erheblich
             var items = this.items.filter(item => item.state != ItemState.Unchanged);
 
@@ -465,6 +484,7 @@ module Item {
                         description: description,
                         market: market,
                         bought: null,
+                        priority: 0,
                         name: name,
                         id: null,
                     }));
