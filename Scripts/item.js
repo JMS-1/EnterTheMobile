@@ -39,6 +39,8 @@ var Item;
             if ((this.market || '') != '')
                 name = this.market + ': ' + name;
             var label = $('<label/>', { text: name, title: this.description, 'for': seq });
+            label.on('swipeleft', function () { return list.moveItem(_this, false); });
+            label.on('swiperight', function () { return list.moveItem(_this, true); });
             items.append(checker, label);
         };
         Item.prototype.onClick = function (ev, list, checker) {
@@ -99,6 +101,20 @@ var Item;
                 this.userId.val(User.getUserId());
             this.settings.popup({ afterclose: null });
             this.settings.popup('open');
+        };
+        List.prototype.moveItem = function (item, forward) {
+            var index = this.items.indexOf(item);
+            if (index < 0)
+                return;
+            var newIndex = index + (forward ? +1 : -1);
+            if (newIndex < 0)
+                return;
+            if (newIndex >= this.items.length)
+                return;
+            this.items[index] = this.items[newIndex];
+            this.items[newIndex] = item;
+            this.save();
+            this.refreshPage();
         };
         List.prototype.tryRegister = function () {
             var _this = this;

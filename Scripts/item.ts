@@ -101,8 +101,11 @@ module Item {
             var name = this.name;
             if ((this.market || '') != '')
                 name = this.market + ': ' + name;
-                
+
             var label = $('<label/>', { text: name, title: this.description, 'for': seq });
+
+            label.on('swipeleft', () => list.moveItem(this, false));
+            label.on('swiperight', () => list.moveItem(this, true));
 
             items.append(checker, label);
         }
@@ -224,6 +227,31 @@ module Item {
 
             this.settings.popup({ afterclose: null });
             this.settings.popup('open');
+        }
+
+        // Verschiebt einen Eintrag.
+        moveItem(item: Item, forward: boolean): void {
+            // Erst einmal müssen wir den Eintrag verifizieren
+            var index = this.items.indexOf(item);
+            if (index < 0)
+                return;
+
+            // Die neue Position
+            var newIndex = index + (forward ? +1 : -1);
+            if (newIndex < 0)
+                return;
+            if (newIndex >= this.items.length)
+                return;
+
+            // Austauschen
+            this.items[index] = this.items[newIndex];
+            this.items[newIndex] = item;
+
+            // Speichern
+            this.save();
+
+            // Neu aufbauen
+            this.refreshPage();
         }
 
         // Führt den einmaligen Anmeldevorgang aus
