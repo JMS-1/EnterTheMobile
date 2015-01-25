@@ -19,6 +19,7 @@
 	// Die Anfrage im JSON Format wird ausgewertet
 	$request = file_get_contents('php://input');
 	$json = json_decode($request, true);
+	$markets = $json['markets'];
 	$userid = $json['userid'];
 	$items = $json['items'];
 
@@ -27,36 +28,38 @@
 
 	// Alle Variablen, die wir in Bindungen verwenden, werden vorab definiert - das macht ein paar Abläufe einfacher
 	$description = null;
+	$marketname = null;
 	$priority = null;
+	$oldname = null;
+	$newname = null;
 	$created = null;
 	$bought = null;
-	$market = null;
 	$state = null;
 	$name = null;
 	$id = null;
 
 	// Die einzelnen Befehle zum Anlegen, Löschen, Ändern und Auslesen werden vorbereitet
 	$insert = $con->prepare('INSERT INTO buyList (userid, item, description, added, bought, `where`, `priority`) VALUES(?, ?, ?, FROM_UNIXTIME(?), FROM_UNIXTIME(?), ?, ?)');
-	$insert->bind_param('sssiisi', $userid, $name, $description, $created, $bought, $market, $priority);
+	$insert->bind_param('sssiisi', $userid, $name, $description, $created, $bought, $marketname, $priority);
 
 	$delete = $con->prepare('DELETE FROM buyList WHERE userid = ? AND id = ?');
 	$delete->bind_param('si', $userid, $id);
 	
 	$update = $con->prepare('UPDATE buyList SET item = ?, description = ?, bought = FROM_UNIXTIME(?), `where` = ?, `priority` = ? WHERE userid = ? AND id = ?');
-	$update->bind_param('ssisisi', $name, $description, $bought, $market, $priority, $userid, $id);
+	$update->bind_param('ssisisi', $name, $description, $bought, $marketname, $priority, $userid, $id);
 	
 	$query = $con->prepare('SELECT id, item, description, UNIX_TIMESTAMP(added), `where`, `priority` FROM buyList WHERE userid = ? AND (bought IS NULL OR `where` IS NULL) ORDER BY `priority`, id');
 	$query->bind_param('s', $userid);
-	$query->bind_result($id, $name, $description, $created, $market, $priority);
+	$query->bind_result($id, $name, $description, $created, $marketname, $priority);
 
 	// Alle Offline veränderten Produkte werden untersucht
 	foreach($items as $item){
 		// Wir füllen alle potentiell verwendeten Bindingsvariablen - das macht den Programmcode etwas einfacher
 		$created = strtotime($item['created']);
 		$description = $item['description'];
+		$marketname = $item['market'];
 		$priority = $item['priority'];
 		$bought = $item['bought'];
-		$market = $item['market'];
 		$state = $item['state'];
 		$name = $item['name'];
 		$id = $item['id'];
@@ -96,28 +99,82 @@
 		}
 	}
 
+	// Und genauso für die Märkte
+	$updateMarket = $con->prepare('UPDATE buyMarkets SET name = ? WHERE name = ? AND userid = ?');
+	$updateMarket->bind_param('sss', $newname, $oldname, $userid);
+
+	$insertMarket = $con->prepare('INSERT INTO buyMarkets (userid, name) VALUES(?, ?)');
+	$insertMarket->bind_param('ss', $userid, $newname);
+
+	$deleteMarket = $con->prepare('DELETE FROM buyMarkets WHERE name = ? AND userid = ?');
+	$deleteMarket->bind_param('ss', $oldname, $userid);
+
+	$queryMarket = $con->prepare('SELECT name FROM buyMarkets WHERE userid = ?');
+	$queryMarket->bind_param('s', $userid);
+	$queryMarket->bind_result($oldname);
+
+	// Alle Offline veränderten Märkte
+	foreach($markets as $market){
+		// Wir füllen alle potentiell verwendeten Bindingsvariablen - das macht den Programmcode etwas einfacher
+		$oldname = $market['originalName'];
+		$newname = $market['name'];
+		$isDeleted = $market['deleted'];
+
+		// Löschen oder Ändern
+		if ($isDeleted)
+			$deleteMarket->execute();
+		else
+		{
+			$updateMarket->execute();
+
+			// Dann halt anlegen
+			if ($updateMarket->affected_rows < 1)
+				$insertMarket->execute();
+		}
+	}
+
 	// Hier sammeln wir die Produkte, die als Ergebnis gemeldet werden
-	$results = array();
+	$items = array();
 
 	// Produkte des Anwenders aus der Datenbank auslesen
 	$query->execute();
 
 	while ($query->fetch()) {
 		// Einzelergebnis zusammenstellen
-		$result['created'] = date('c', $created);
-		$result['state'] = ItemState::Unchanged;
-		$result['description'] = $description;
-		$result['priority'] = $priority;
-		$result['market'] = $market;
-		$result['bought'] = null;
-		$result['name'] = $name;
-		$result['id'] = $id;
+		$resultItem['created'] = date('c', $created);
+		$resultItem['state'] = ItemState::Unchanged;
+		$resultItem['description'] = $description;
+		$resultItem['priority'] = $priority;
+		$resultItem['market'] = $marketname;
+		$resultItem['bought'] = null;
+		$resultItem['name'] = $name;
+		$resultItem['id'] = $id;
 
 		// Und im Gesamtergebnis sammeln
-		array_push($results, $result);
+		array_push($items, $resultItem);
+	}
+
+	// Hier sammeln wir die Märkte, die als Ergebnis gemeldet werden
+	$markets = array();
+
+	// Märkte des Anwenders aus der Datenbank auslesen
+	$queryMarket->execute();
+
+	while ($queryMarket->fetch()) {
+		// Einzelergebnis zusammenstellen
+		$resultMarket['originalName'] = $oldname;
+		$resultMarket['name'] = $oldname;
+		$resultMarket['deleted'] = false;
+
+		// Und im Gesamtergebnis sammeln
+		array_push($markets, $resultMarket);
 	}
 
 	// Ressourcen freigeben
+	$insertMarket->close();
+	$deleteMarket->close();
+	$updateMarket->close();
+	$queryMarket->close();
 	$insert->close();
 	$delete->close();
 	$update->close();
@@ -129,7 +186,8 @@
 	header('Content-Type: application/json');
 
 	// Ergebnis zusammenstellen und senden
-	$response['items'] = $results;
+	$response['items'] = $items;
+	$response['markets'] = $markets;
 
 	echo json_encode($response);
 ?>

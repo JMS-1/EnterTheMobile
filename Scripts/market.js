@@ -8,10 +8,14 @@ var Market;
 (function (_Market) {
     var Market = (function () {
         function Market(fromStore) {
+            this.originalName = (fromStore.originalName === undefined) ? null : fromStore.originalName;
             this.name = fromStore.name;
+            this.deleted = fromStore.deleted || false;
         }
         Market.prototype.appendTo = function (items) {
             var _this = this;
+            if (this.deleted)
+                return;
             var choose = $('<a/>', { text: this.name, href: Item.List.pageName });
             choose.on('click', function () { return TheApplication.activeMarket = _this; });
             var edit = $('<a/>', { href: MarketItem.pageName });
@@ -30,13 +34,18 @@ var Market;
         __extends(List, _super);
         function List() {
             _super.call(this, '#marketList', '[data-role=listview]', '#newMarket');
-            this.loadFromStorage();
+            var storedMarkets = JSON.parse(localStorage[List.storageKey] || null) || [];
+            this.update(storedMarkets);
         }
         List.prototype.refreshPage = function () {
             var _this = this;
             this.list.empty();
             $.each(this.markets, function (i, market) { return market.appendTo(_this.list); });
             this.list.listview('refresh');
+        };
+        List.prototype.update = function (markets) {
+            this.markets = $.map(markets, function (stored) { return new Market(stored); });
+            this.save();
         };
         List.prototype.save = function () {
             this.markets.sort(Market.compare);
@@ -46,9 +55,6 @@ var Market;
             TheApplication.marketScope = null;
         };
         List.prototype.loadFromStorage = function () {
-            var storedMarkets = JSON.parse(localStorage[List.storageKey] || null) || [];
-            this.markets = $.map(storedMarkets, function (stored) { return new Market(stored); });
-            this.save();
         };
         List.storageKey = 'JMSBuy.MarketList';
         return List;
@@ -87,13 +93,12 @@ var Market;
         MarketItem.prototype.saveChanges = function () {
             var name = this.getName();
             if (TheApplication.marketScope == null)
-                this.master.markets.push(new Market({ name: name }));
+                this.master.markets.push(new Market({ originalName: null, name: name, deleted: false }));
             else
                 TheApplication.marketScope.name = name;
         };
         MarketItem.prototype.deleteItem = function () {
-            var index = this.master.markets.indexOf(TheApplication.marketScope);
-            this.master.markets.splice(index, 1);
+            TheApplication.marketScope.deleted = true;
         };
         MarketItem.prototype.initializeForm = function () {
             if (TheApplication.marketScope == null) {

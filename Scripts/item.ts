@@ -151,6 +151,8 @@ module Item {
     // So sieht die Antwort bei der Synchronisation des Offline Produktbestandes mit der Datenbank aus
     interface ISynchronized {
         items: IStoredItem[];
+
+        markets: Market.IStoredMarket[];
     }
 
     // Die Liste aller Produkte
@@ -338,6 +340,9 @@ module Item {
                     this.items = $.map(itemList.items, stored => new Item(stored));
                     this.save();
 
+                    // Auch die Märkte
+                    TheApplication.getMarkets().update(itemList.markets);
+
                     // Es ist nun wieder möglich, eine weitere Synchronisation anzustossen
                     TheApplication.enable(this.sync);
 
@@ -354,8 +359,11 @@ module Item {
             // Es werden nur unveränderte oder neue Produkte übertragen - das reduziert die Datenmenge eventuell erheblich
             var items = this.items.filter(item => item.state != ItemState.Unchanged);
 
+            // Bei den Märkten aber immer alle
+            var markets = TheApplication.getMarkets().markets.filter(market => market.deleted || (market.name != market.originalName));
+
             return $.ajax({
-                data: JSON.stringify({ userid: User.getUserId(), items: items }),
+                data: JSON.stringify({ userid: User.getUserId(), items: items, markets: markets }),
                 contentType: 'application/json',
                 url: 'sync.php',
                 type: 'POST',
@@ -546,7 +554,7 @@ module Item {
 
             this.market.append($('<option />'), anyOption);
 
-            $.each(TheApplication.getMarkets(), (index, market) => {
+            $.each(TheApplication.getMarkets().markets, (index, market) => {
                 var marketOption = $('<option />', { text: market.name });
                 if (item != null)
                     if (market.name == item.market)

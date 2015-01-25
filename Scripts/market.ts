@@ -5,8 +5,14 @@
 module Market {
     // Die Struktur der Ablage eines Marktes.
     export interface IStoredMarket {
+        // Der ursprüngliche Name des Marktes (aus der Datenbank)
+        originalName: string;
+
         // Der Name des Marktes
         name: string;
+
+        // Gesetzt, wenn der Markt aktiv entfernt wurde
+        deleted: boolean;
     }
 
     // Die interne Repräsentation eines Marktes.
@@ -18,12 +24,21 @@ module Market {
     // Die Implementierung eines Marktes
     class Market implements IMarket {
         constructor(fromStore: IStoredMarket) {
+            this.originalName = (fromStore.originalName === undefined) ? null : fromStore.originalName;
             this.name = fromStore.name;
+            this.deleted = fromStore.deleted || false;
         }
+
+        originalName: string;
 
         name: string;
 
+        deleted: boolean;
+
         appendTo(items: JQuery): void {
+            if (this.deleted)
+                return;
+
             // Die Anzeige des Namens zu Auswahl
             var choose = $('<a/>', { text: this.name, href: Item.List.pageName });
             choose.on('click', () => TheApplication.activeMarket = this);
@@ -57,8 +72,11 @@ module Market {
         constructor() {
             super('#marketList', '[data-role=listview]', '#newMarket');
 
-            // Einmalig vorab laden
-            this.loadFromStorage();
+            // Lokale Ablage auslesen
+            var storedMarkets: IStoredMarket[] = JSON.parse(localStorage[List.storageKey] || null) || [];
+
+            // Sortieren und zurückspeichern - nur zur Sicherheit
+            this.update(storedMarkets);
         }
 
         // Aktualisiert die Liste der Märkte
@@ -70,6 +88,15 @@ module Market {
 
             // Und schließlich die Styles aktualisiert
             this.list.listview('refresh');
+        }
+
+        // Synchronisiert die lokale Ablage.
+        update(markets: IStoredMarket[]) {
+            // Daten übernehmen
+            this.markets = $.map(markets, stored => new Market(stored));
+
+            // Sortieren und Offline speichern
+            this.save();
         }
 
         // Aktualisiert die lokale Ablage.
@@ -86,14 +113,6 @@ module Market {
 
         // Wird einmalig beim Erzeugen der Seite aufgerufen.
         protected loadFromStorage(): void {
-            // Lokale Ablage auslesen
-            var storedMarkets: IStoredMarket[] = JSON.parse(localStorage[List.storageKey] || null) || [];
-
-            // Rohdaten aus der Ablage in nützliche Objekte wandeln
-            this.markets = $.map(storedMarkets, stored => new Market(stored));
-
-            // Sortieren und zurückspeichern - nur zur Sicherheit
-            this.save();
         }
     }
 
@@ -154,7 +173,7 @@ module Market {
 
             if (TheApplication.marketScope == null)
                 // Ein neuer Markt wird angelegt
-                this.master.markets.push(new Market({ name: name }));
+                this.master.markets.push(new Market({ originalName: null, name: name, deleted: false }));
             else
                 // Ein existierender Markt wird verändert
                 TheApplication.marketScope.name = name;
@@ -162,9 +181,7 @@ module Market {
 
         // Entfernt den gerade bearbeiteten Markt.
         protected deleteItem(): void {
-            var index = this.master.markets.indexOf(TheApplication.marketScope);
-
-            this.master.markets.splice(index, 1);
+            TheApplication.marketScope.deleted = true;
         }
 
         // Zeigt das Formular an.

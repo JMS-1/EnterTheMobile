@@ -166,6 +166,7 @@ var Item;
                     return;
                 _this.items = $.map(itemList.items, function (stored) { return new Item(stored); });
                 _this.save();
+                TheApplication.getMarkets().update(itemList.markets);
                 TheApplication.enable(_this.sync);
                 _this.refreshPage();
             });
@@ -173,8 +174,9 @@ var Item;
         List.prototype.updateDatabase = function () {
             $.each(this.items, function (index, item) { return item.priority = index; });
             var items = this.items.filter(function (item) { return item.state != 3 /* Unchanged */; });
+            var markets = TheApplication.getMarkets().markets.filter(function (market) { return market.deleted || (market.name != market.originalName); });
             return $.ajax({
-                data: JSON.stringify({ userid: User.getUserId(), items: items }),
+                data: JSON.stringify({ userid: User.getUserId(), items: items, markets: markets }),
                 contentType: 'application/json',
                 url: 'sync.php',
                 type: 'POST',
@@ -295,7 +297,7 @@ var Item;
             var anyOption = $('<option />', { value: '', text: '(egal)' });
             var selectedOption = anyOption;
             this.market.append($('<option />'), anyOption);
-            $.each(TheApplication.getMarkets(), function (index, market) {
+            $.each(TheApplication.getMarkets().markets, function (index, market) {
                 var marketOption = $('<option />', { text: market.name });
                 if (item != null)
                     if (market.name == item.market)

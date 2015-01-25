@@ -11,7 +11,7 @@ module TheApplication {
     export var marketScope: Market.IMarket = null; // Der Markt, der im Detailformular angezeigt wird
     export var itemScope: Item.IItem = null; // Das Produkt, das im Detailformular angezeigt wird
 
-    var marketReader: () => Market.IMarket[];
+    var marketSelectionList: Market.List;
 
     $(() => {
         // Wir möchten wir eine echte App aussehen
@@ -22,11 +22,8 @@ module TheApplication {
         var itemDetails = new Item.Details(itemList);
 
         // Marktverwaltung starten
-        var marketSelectionList = new Market.List();
+        marketSelectionList = new Market.List();
         var marketDetails = new Market.MarketItem(marketSelectionList);
-
-        // Auslesen der aktuellen Märkte aktivieren
-        marketReader = () => marketSelectionList.markets;
 
         // Anbindung an die Offline Verwaltung
         window.applicationCache.addEventListener('updateready', () => {
@@ -36,8 +33,8 @@ module TheApplication {
     });
 
     // Meldet alle gerade bekannten Märkte
-    export function getMarkets(): Market.IMarket[] {
-        return marketReader();
+    export function getMarkets(): Market.List {
+        return marketSelectionList;
     }
 
     // Deaktiviert Eingabelemente, Schaltflächen und Verweise.
