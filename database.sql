@@ -10,7 +10,7 @@ CREATE TABLE `buyList` (
   `userid` char(32) COLLATE latin1_german2_ci NOT NULL,
   `item` varchar(100) COLLATE latin1_german2_ci NOT NULL,
   `description` varchar(200) COLLATE latin1_german2_ci DEFAULT NULL,
-  `added` timestamp NOT NULL,
+  `added` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `bought` timestamp NULL DEFAULT NULL,
   `where` varchar(40) COLLATE latin1_german2_ci DEFAULT NULL,
   `priority` int(11) NOT NULL,  
