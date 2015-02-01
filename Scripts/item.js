@@ -296,7 +296,7 @@ var Item;
             this.market.empty();
             var anyOption = $('<option />', { value: '', text: '(egal)' });
             var selectedOption = anyOption;
-            this.market.append($('<option />'), anyOption);
+            this.market.append(anyOption);
             $.each(TheApplication.getMarkets().markets, function (index, market) {
                 var marketOption = $('<option />', { text: market.name });
                 if (item != null)
