@@ -31,6 +31,13 @@ var Item;
             if (typeof (this.bought) == 'string')
                 this.bought = new Date((this.bought));
         }
+        Item.prototype.setPriority = function (newPriority) {
+            if (newPriority == this.priority)
+                return;
+            this.priority = newPriority;
+            if (this.state == 3 /* Unchanged */)
+                this.state = 2 /* Modified */;
+        };
         Item.prototype.appendTo = function (items, list) {
             var _this = this;
             if (this.state == 1 /* Deleted */)
@@ -172,7 +179,7 @@ var Item;
             });
         };
         List.prototype.updateDatabase = function () {
-            $.each(this.items, function (index, item) { return item.priority = index; });
+            $.each(this.items, function (index, item) { return item.setPriority(index); });
             var items = this.items.filter(function (item) { return item.state != 3 /* Unchanged */; });
             var markets = TheApplication.getMarkets().markets.filter(function (market) { return market.deleted || (market.name != market.originalName); });
             return $.ajax({

@@ -51,6 +51,9 @@ module Item {
     export interface IItem extends IStoredItem {
         // Erstellt einen Auswahleintrag des Produktes in der Liste aller Produkte.
         appendTo(items: JQuery, list: List): void;
+
+        // Aktualisiert die Ordnung.
+        setPriority(newPriority: number): void;
     }
 
     // Die konkete Implementierung eines Produktes.
@@ -93,6 +96,16 @@ module Item {
                 this.created = new Date(<string><any>(this.created));
             if (typeof (this.bought) == 'string')
                 this.bought = new Date(<string><any>(this.bought));
+        }
+
+        setPriority(newPriority: number): void {
+            if (newPriority == this.priority)
+                return;
+
+            this.priority = newPriority;
+
+            if (this.state == ItemState.Unchanged)
+                this.state = ItemState.Modified;
         }
 
         appendTo(items: JQuery, list: List): void {
@@ -354,7 +367,7 @@ module Item {
         // Führt den Aufruf an die Datenbank aus.
         private updateDatabase(): JQueryPromise<ISynchronized> {
             // Aktuelle Ordnung fixieren
-            $.each(this.items, (index, item) => item.priority = index);
+            $.each(this.items, (index, item) => item.setPriority(index));
 
             // Es werden nur unveränderte oder neue Produkte übertragen - das reduziert die Datenmenge eventuell erheblich
             var items = this.items.filter(item => item.state != ItemState.Unchanged);
