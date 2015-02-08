@@ -35,8 +35,6 @@ var Item;
             if (newPriority == this.priority)
                 return;
             this.priority = newPriority;
-            if (this.state == 3 /* Unchanged */)
-                this.state = 2 /* Modified */;
         };
         Item.prototype.appendTo = function (items, list) {
             var _this = this;

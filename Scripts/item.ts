@@ -103,9 +103,6 @@ module Item {
                 return;
 
             this.priority = newPriority;
-
-            if (this.state == ItemState.Unchanged)
-                this.state = ItemState.Modified;
         }
 
         appendTo(items: JQuery, list: List): void {
