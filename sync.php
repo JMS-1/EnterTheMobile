@@ -45,7 +45,7 @@
 	$delete = $con->prepare('DELETE FROM buyList WHERE userid = ? AND id = ?');
 	$delete->bind_param('si', $userid, $id);
 	
-	$update = $con->prepare('UPDATE buyList SET item = ?, description = ?, bought = FROM_UNIXTIME(?), `where` = ?, `priority` = ? WHERE userid = ? AND id = ?');
+	$update = $con->prepare('UPDATE buyList SET item = ?, description = ?, bought = FROM_UNIXTIME(?), `where` = ?, `priority` = ? WHERE userid = ? AND id = ? AND bought IS NULL');
 	$update->bind_param('ssisisi', $name, $description, $bought, $marketname, $priority, $userid, $id);
 	
 	$query = $con->prepare('SELECT id, item, description, UNIX_TIMESTAMP(added), `where`, `priority` FROM buyList WHERE userid = ? AND (bought IS NULL OR `where` IS NULL) ORDER BY `priority`, id');
