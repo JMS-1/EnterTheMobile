@@ -30,8 +30,9 @@ var Item;
         }
         Item.prototype.setPriority = function (newPriority) {
             if (newPriority == this.priority)
-                return;
+                return false;
             this.priority = newPriority;
+            return true;
         };
         Item.prototype.appendTo = function (items, list) {
             var _this = this;
@@ -169,8 +170,14 @@ var Item;
             });
         };
         List.prototype.updateDatabase = function () {
-            $.each(this.items, function (index, item) { return item.setPriority(index); });
-            var items = this.items;
+            var mustUpdateItems = false;
+            $.each(this.items, function (index, item) {
+                if (item.setPriority(index))
+                    mustUpdateItems = true;
+                else if (item.state != 3 /* Unchanged */)
+                    mustUpdateItems = true;
+            });
+            var items = mustUpdateItems ? this.items : [];
             var markets = TheApplication.getMarkets().markets.filter(function (market) { return market.deleted || (market.name != market.originalName); });
             return $.ajax({
                 data: JSON.stringify({ userid: User.getUserId(), items: items, markets: markets }),

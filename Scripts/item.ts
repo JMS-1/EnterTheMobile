@@ -94,11 +94,13 @@ module Item {
                 this.bought = new Date(<string><any>(this.bought));
         }
 
-        setPriority(newPriority: number): void {
+        setPriority(newPriority: number): boolean {
             if (newPriority == this.priority)
-                return;
+                return false;
 
             this.priority = newPriority;
+
+            return true;
         }
 
         appendTo(items: JQuery, list: List): void {
@@ -119,8 +121,8 @@ module Item {
 
             var label = $('<label/>', { text: name, title: this.description, 'for': seq });
 
-            label.on('swipeleft', () => list.moveItem(this, false));
-            label.on('swiperight', () => list.moveItem(this, true));
+            label.on('swipeleft',() => list.moveItem(this, false));
+            label.on('swiperight',() => list.moveItem(this, true));
 
             items.append(checker, label);
         }
@@ -214,18 +216,18 @@ module Item {
             var settings = this.page.find('#openSettings');
             var reregister = this.settings.find('#newRegister');
 
-            this.filter.on('change', () => this.refreshPage());
-            someFilter.on('change', () => this.refreshPage());
+            this.filter.on('change',() => this.refreshPage());
+            someFilter.on('change',() => this.refreshPage());
 
-            this.shopping.on('click', () => this.onBuy());
-            this.sync.on('click', () => this.synchronize());
+            this.shopping.on('click',() => this.onBuy());
+            this.sync.on('click',() => this.synchronize());
 
             this.dialog.popup();
             this.settings.enhanceWithin().popup({ positionTo: settings.selector });
-            this.register.on('click', () => this.tryRegister());
-            settings.on('click', () => this.showSettings());
+            this.register.on('click',() => this.tryRegister());
+            settings.on('click',() => this.showSettings());
 
-            reregister.on('click', () => this.reRegister());
+            reregister.on('click',() => this.reRegister());
 
             // Die Einstiegsseite erstmalig mit den Produkdaten füllen
             this.loadFromStorage();
@@ -281,22 +283,22 @@ module Item {
 
             User.getUser(userId)
                 .done(userNameInfo => {
-                    // Den Dialog schliessen wir immer
-                    this.dialog.popup('close');
+                // Den Dialog schliessen wir immer
+                this.dialog.popup('close');
 
-                    if (typeof (userNameInfo) == 'string') {
-                        // Bei Fehlern stellen wir sicher, dass wir es nicht noch einmal probieren - erst nach dem nächsten Refresh der Anwendung
-                        TheApplication.disable(this.sync);
-                    }
-                    else if (userNameInfo.name.length > 0) {
-                        // Die Benutzerkennung wurde bestätigt
-                        User.setUserId(userId, userNameInfo.name);
+                if (typeof (userNameInfo) == 'string') {
+                    // Bei Fehlern stellen wir sicher, dass wir es nicht noch einmal probieren - erst nach dem nächsten Refresh der Anwendung
+                    TheApplication.disable(this.sync);
+                }
+                else if (userNameInfo.name.length > 0) {
+                    // Die Benutzerkennung wurde bestätigt
+                    User.setUserId(userId, userNameInfo.name);
 
-                        // Nun können wir die ursprünglich angeforderte Synchronisation mit der Datenbank anfordern
-                        this.refreshPage();
-                        this.onSynchronize();
-                    }
-                });
+                    // Nun können wir die ursprünglich angeforderte Synchronisation mit der Datenbank anfordern
+                    this.refreshPage();
+                    this.onSynchronize();
+                }
+            });
         }
 
         // Zeigt den Anmeldedialog erneut an.
@@ -331,32 +333,41 @@ module Item {
 
             this.updateDatabase()
                 .done(itemList => {
-                    // Im Fehlerfall lassen wir die Schaltfläche einfach deaktiviert
-                    if (typeof (itemList) == 'string')
-                        return;
+                // Im Fehlerfall lassen wir die Schaltfläche einfach deaktiviert
+                if (typeof (itemList) == 'string')
+                    return;
 
-                    // Die Informationen aus der Online Datenbank werden lokal übernommen
-                    this.items = $.map(itemList.items, stored => new Item(stored));
-                    this.save();
+                // Die Informationen aus der Online Datenbank werden lokal übernommen
+                this.items = $.map(itemList.items, stored => new Item(stored));
+                this.save();
 
-                    // Auch die Märkte
-                    TheApplication.getMarkets().update(itemList.markets);
+                // Auch die Märkte
+                TheApplication.getMarkets().update(itemList.markets);
 
-                    // Es ist nun wieder möglich, eine weitere Synchronisation anzustossen
-                    TheApplication.enable(this.sync);
+                // Es ist nun wieder möglich, eine weitere Synchronisation anzustossen
+                TheApplication.enable(this.sync);
 
-                    // Die Produktliste muss entsprechend erneuert werden
-                    this.refreshPage();
-                });
+                // Die Produktliste muss entsprechend erneuert werden
+                this.refreshPage();
+            });
         }
 
         // Führt den Aufruf an die Datenbank aus.
         private updateDatabase(): JQueryPromise<ISynchronized> {
+            // Schauen wir mal, ob eine Aktualisierung notwendig ist
+            var mustUpdateItems = false;
+
             // Aktuelle Ordnung fixieren
-            $.each(this.items, (index, item) => item.setPriority(index));
+            $.each(this.items,(index, item) => {
+                // Eine Aktualisierung ist sicher notwendig, wenn sich die Ordnung oder die Daten zum Produkt verändert haben
+                if (item.setPriority(index))
+                    mustUpdateItems = true;
+                else if (item.state != ItemState.Unchanged)
+                    mustUpdateItems = true;
+            });
 
             // Es werden immer alle Produkte übertragen
-            var items = this.items;
+            var items = mustUpdateItems ? this.items : [];
 
             // Bei bei den Märkten aber nur die Veränderungen
             var markets = TheApplication.getMarkets().markets.filter(market => market.deleted || (market.name != market.originalName));
@@ -376,7 +387,7 @@ module Item {
             // Filterbedingung auswerten
             var all = this.filter.is(':checked');
 
-            $.each(this.items, (i, item) => {
+            $.each(this.items,(i, item) => {
                 if (all || (item.bought == null))
                     item.appendTo(this.list, this);
             });
@@ -457,7 +468,7 @@ module Item {
             this.market = this.form.find('#itemMarket');
 
             this.name = this.form.find('#itemName');
-            this.name.on('change input', () => this.onValidate());
+            this.name.on('change input',() => this.onValidate());
         }
 
         // Meldet den eingegebenen Namen.
@@ -553,7 +564,7 @@ module Item {
 
             this.market.append(anyOption);
 
-            $.each(TheApplication.getMarkets().markets, (index, market) => {
+            $.each(TheApplication.getMarkets().markets,(index, market) => {
                 var marketOption = $('<option />', { text: market.name });
                 if (item != null)
                     if (market.name == item.market)
