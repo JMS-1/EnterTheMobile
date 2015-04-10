@@ -48,6 +48,9 @@
 	$update = $con->prepare('UPDATE buyList SET item = ?, description = ?, bought = FROM_UNIXTIME(?), `where` = ?, `priority` = ? WHERE userid = ? AND id = ? AND bought IS NULL');
 	$update->bind_param('ssisisi', $name, $description, $bought, $marketname, $priority, $userid, $id);
 	
+	$updateOrder = $con->prepare('UPDATE buyList SET `priority` = ? WHERE userid = ? AND id = ? AND bought IS NULL');
+	$updateOrder->bind_param('isi', $priority, $userid, $id);
+
 	$query = $con->prepare('SELECT id, item, description, UNIX_TIMESTAMP(added), `where`, `priority` FROM buyList WHERE userid = ? AND (bought IS NULL OR `where` IS NULL) ORDER BY `priority`, id');
 	$query->bind_param('s', $userid);
 	$query->bind_result($id, $name, $description, $created, $marketname, $priority);
@@ -85,8 +88,14 @@
 				break;
 			}
 
+			case ItemState::Unchanged:{
+				$updateOrder->execute();
+				break;
+			}
+
 			default: {
 				// Aufräumen
+				$updateOrder->close();
 				$insert->close();
 				$delete->close();
 				$update->close();
@@ -175,6 +184,7 @@
 	$deleteMarket->close();
 	$updateMarket->close();
 	$queryMarket->close();
+	$updateOrder->close();
 	$insert->close();
 	$delete->close();
 	$update->close();

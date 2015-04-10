@@ -23,9 +23,6 @@ var Item;
             this.created = stored.created;
             this.priority = stored.priority || 0;
             this.description = stored.description;
-            if (stored.priority === undefined)
-                if (this.state == 3 /* Unchanged */)
-                    this.state = 2 /* Modified */;
             if (typeof (this.created) == 'string')
                 this.created = new Date((this.created));
             if (typeof (this.bought) == 'string')
@@ -120,12 +117,7 @@ var Item;
                 return;
             if (newIndex >= this.items.length)
                 return;
-            var nextItem = this.items[newIndex];
-            if (nextItem.state == 3 /* Unchanged */)
-                nextItem.state = 2 /* Modified */;
-            if (item.state == 3 /* Unchanged */)
-                item.state = 2 /* Modified */;
-            this.items[index] = nextItem;
+            this.items[index] = this.items[newIndex];
             this.items[newIndex] = item;
             this.save();
             this.refreshPage();
@@ -178,7 +170,7 @@ var Item;
         };
         List.prototype.updateDatabase = function () {
             $.each(this.items, function (index, item) { return item.setPriority(index); });
-            var items = this.items.filter(function (item) { return item.state != 3 /* Unchanged */; });
+            var items = this.items;
             var markets = TheApplication.getMarkets().markets.filter(function (market) { return market.deleted || (market.name != market.originalName); });
             return $.ajax({
                 data: JSON.stringify({ userid: User.getUserId(), items: items, markets: markets }),

@@ -87,10 +87,6 @@ module Item {
             this.priority = stored.priority || 0;
             this.description = stored.description;
 
-            if (stored.priority === undefined)
-                if (this.state == ItemState.Unchanged)
-                    this.state = ItemState.Modified;
-
             // Datumswerte werden bei der Persistierung in ISO Zeichenketten gewandelt, intern arbeiten wir aber mit echten Datumsobjekten.
             if (typeof (this.created) == 'string')
                 this.created = new Date(<string><any>(this.created));
@@ -264,15 +260,8 @@ module Item {
             if (newIndex >= this.items.length)
                 return;
 
-            // Markieren
-            var nextItem = this.items[newIndex];
-            if (nextItem.state == ItemState.Unchanged)
-                nextItem.state = ItemState.Modified;
-            if (item.state == ItemState.Unchanged)
-                item.state = ItemState.Modified;
-
             // Austauschen
-            this.items[index] = nextItem;
+            this.items[index] = this.items[newIndex];
             this.items[newIndex] = item;
 
             // Speichern
@@ -346,7 +335,7 @@ module Item {
                     if (typeof (itemList) == 'string')
                         return;
 
-                    // Die Informationen aus der Datenbank werden lokal übernommen
+                    // Die Informationen aus der Online Datenbank werden lokal übernommen
                     this.items = $.map(itemList.items, stored => new Item(stored));
                     this.save();
 
@@ -366,10 +355,10 @@ module Item {
             // Aktuelle Ordnung fixieren
             $.each(this.items, (index, item) => item.setPriority(index));
 
-            // Es werden nur unveränderte oder neue Produkte übertragen - das reduziert die Datenmenge eventuell erheblich
-            var items = this.items.filter(item => item.state != ItemState.Unchanged);
+            // Es werden immer alle Produkte übertragen
+            var items = this.items;
 
-            // Bei den Märkten aber immer alle
+            // Bei bei den Märkten aber nur die Veränderungen
             var markets = TheApplication.getMarkets().markets.filter(market => market.deleted || (market.name != market.originalName));
 
             return $.ajax({
