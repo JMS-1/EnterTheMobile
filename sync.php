@@ -148,13 +148,16 @@
 	// Produkte des Anwenders aus der Datenbank auslesen
 	$query->execute();
 
+	// Wir nummerieren auch neu
+	$index = 0;
+
 	while ($query->fetch()) {
 		// Einzelergebnis zusammenstellen
 		$resultItem['created'] = date('c', $created);
 		$resultItem['state'] = ItemState::Unchanged;
 		$resultItem['description'] = $description;
-		$resultItem['priority'] = $priority;
 		$resultItem['market'] = $marketname;
+		$resultItem['priority'] = $index++;
 		$resultItem['bought'] = null;
 		$resultItem['name'] = $name;
 		$resultItem['id'] = $id;
